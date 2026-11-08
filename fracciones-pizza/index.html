@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fracciones con pizza</title>
+<style>
+    :root {
+        --navy: #16324f;
+        --navy-dark: #0e2338;
+        --turquoise: #2ca6a4;
+        --turquoise-dark: #1f7d7b;
+        --amber: #e8a13c;
+        --amber-dark: #c07f1f;
+        --green: #3a7d44;
+        --red: #c0392b;
+        --paper: #f7f3ea;
+        --card: #ffffff;
+        --ink: #22303c;
+        --ink-soft: #5a6b7a;
+        --line: #e2dccd;
+        --font-body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --font-math: Palatino, 'Palatino Linotype', 'URW Palladio L', Georgia, serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: var(--font-body);
+        background: var(--paper);
+        color: var(--ink);
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    header {
+        background: var(--navy);
+        color: #fff;
+        padding: 18px 24px;
+        text-align: center;
+        border-bottom: 4px solid var(--turquoise);
+    }
+    header h1 {
+        margin: 0;
+        font-size: 1.7em;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+    header p {
+        margin: 6px 0 0;
+        font-size: 0.95em;
+        color: #cfe3e2;
+    }
+
+    main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+    }
+
+    .panel {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 14px rgba(22, 50, 79, 0.07);
+    }
+
+    /* ---------- Controles ---------- */
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+    }
+
+    .fraction-input {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+    .fraction-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .fraction-input input {
+        width: 84px;
+        padding: 8px 4px;
+        font-size: 30px;
+        font-family: var(--font-math);
+        font-weight: 700;
+        text-align: center;
+        color: var(--navy);
+        border: 3px solid var(--turquoise);
+        border-radius: 10px;
+        background: #fdfcf9;
+    }
+    .fraction-input input:focus,
+    button:focus-visible,
+    input[type="checkbox"]:focus-visible {
+        outline: 3px solid var(--amber);
+        outline-offset: 2px;
+    }
+    /* Ocultar flechas nativas: usamos los botones grandes */
+    .fraction-input input::-webkit-outer-spin-button,
+    .fraction-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .fraction-input input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+    .fraction-line {
+        width: 150px;
+        height: 4px;
+        background: var(--navy);
+        border-radius: 2px;
+        margin: 4px 0;
+    }
+    .label {
+        font-size: 13px;
+        color: var(--ink-soft);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .step-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        background: var(--turquoise);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+    }
+    .step-btn:hover { background: var(--turquoise-dark); }
+    .step-btn:active { transform: scale(0.94); }
+
+    .examples {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+    }
+    .examples .label { margin-bottom: 2px; }
+    .example-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .example-btn {
+        font-family: var(--font-math);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--navy);
+        background: #fdfcf9;
+        border: 2px solid var(--amber);
+        border-radius: 8px;
+        padding: 6px 14px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .example-btn:hover { background: #faecd4; }
+
+    .options { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-soft); }
+    .options input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--turquoise); }
+
+    /* ---------- Panel de información ---------- */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
+    }
+    .info-card {
+        border: 1px solid var(--line);
+        border-left: 6px solid var(--turquoise);
+        border-radius: 10px;
+        padding: 12px 14px;
+        background: #fdfcf9;
+    }
+    .info-card h3 {
+        margin: 0 0 6px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--ink-soft);
+    }
+    .info-card .value {
+        font-family: var(--font-math);
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--navy);
+        line-height: 1.3;
+    }
+    .info-card .sub {
+        font-size: 13px;
+        color: var(--ink-soft);
+        margin-top: 4px;
+    }
+
+    .badge {
+        display: inline-block;
+        font-family: var(--font-body);
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        border-radius: 999px;
+        padding: 5px 14px;
+    }
+    .badge.nula    { background: var(--ink-soft); }
+    .badge.propia  { background: var(--green); }
+    .badge.unidad  { background: var(--turquoise-dark); }
+    .badge.impropia{ background: var(--red); }
+
+    .frac {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        vertical-align: middle;
+        font-family: var(--font-math);
+        line-height: 1.05;
+        margin: 0 3px;
+    }
+    .frac .num { border-bottom: 2px solid currentColor; padding: 0 5px; }
+    .frac .den { padding: 0 5px; }
+
+    /* ---------- Recta numérica ---------- */
+    .recta-panel h2, .pizzas-panel h2, .info-panel h2 {
+        margin: 0 0 14px;
+        font-size: 1.05em;
+        font-weight: 700;
+        color: var(--navy);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid var(--line);
+        padding-bottom: 8px;
+    }
+    #recta { width: 100%; height: auto; display: block; }
+
+    /* ---------- Pizzas ---------- */
+    .pizzas-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        justify-content: center;
+        align-items: flex-start;
+    }
+    .pizza-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+    .pizza-item canvas {
+        width: min(320px, 82vw);
+        height: auto;
+        cursor: pointer;
+        border-radius: 50%;
+    }
+    .pizza-caption {
+        font-family: var(--font-math);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--navy);
+    }
+    .pizza-caption .eq { color: var(--ink-soft); font-weight: 400; }
+    .hint {
+        text-align: center;
+        font-size: 14px;
+        color: var(--ink-soft);
+        margin: 14px 0 0;
+    }
+
+    footer {
+        text-align: center;
+        font-size: 13px;
+        color: var(--ink-soft);
+        padding: 0 16px 30px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; animation: none !important; }
+    }
+    @media (max-width: 560px) {
+        header h1 { font-size: 1.35em; }
+        .controls { gap: 18px; }
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Fracciones con pizza</h1>
+    <p>Representa una fracción repartiendo porciones de pizza</p>
+</header>
+
+<main>
+
+    <!-- Controles -->
+    <section class="panel">
+        <div class="controls">
+            <div class="fraction-input" aria-label="Introducir fracción">
+                <span class="label" id="lbl-num">Numerador</span>
+                <div class="fraction-row">
+                    <button type="button" class="step-btn" id="num-minus" aria-label="Restar uno al numerador">&minus;</button>
+                    <input type="number" id="numerator" value="3" min="0" max="96" inputmode="numeric" aria-labelledby="lbl-num">
+                    <button type="button" class="step-btn" id="num-plus" aria-label="Sumar uno al numerador">+</button>
+                </div>
+                <div class="fraction-line" role="presentation"></div>
+                <div class="fraction-row">
+                    <button type="button" class="step-btn" id="den-minus" aria-label="Restar uno al denominador">&minus;</button>
+                    <input type="number" id="denominator" value="4" min="1" max="16" inputmode="numeric" aria-labelledby="lbl-den">
+                    <button type="button" class="step-btn" id="den-plus" aria-label="Sumar uno al denominador">+</button>
+                </div>
+                <span class="label" id="lbl-den">Denominador (1&ndash;16)</span>
+            </div>
+
+            <div class="examples">
+                <span class="label">Ejemplos</span>
+                <div class="example-row" id="examples-row"></div>
+                <label class="options">
+                    <input type="checkbox" id="show-labels" checked>
+                    Mostrar la fracci&oacute;n de cada porci&oacute;n
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <!-- Información pedagógica -->
+    <section class="panel info-panel" aria-live="polite">
+        <h2>An&aacute;lisis de la fracci&oacute;n</h2>
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>Lectura</h3>
+                <div class="value" id="info-lectura"></div>
+                <div class="sub" id="info-significado"></div>
+            </div>
+            <div class="info-card">
+                <h3>Tipo de fracci&oacute;n</h3>
+                <div class="value"><span class="badge" id="info-tipo"></span></div>
+                <div class="sub" id="info-tipo-exp"></div>
+            </div>
+            <div class="info-card">
+                <h3>N&uacute;mero mixto</h3>
+                <div class="value" id="info-mixto"></div>
+                <div class="sub" id="info-mixto-exp"></div>
+            </div>
+            <div class="info-card">
+                <h3>Valor decimal y porcentaje</h3>
+                <div class="value" id="info-decimal"></div>
+                <div class="sub" id="info-porcentaje"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recta numérica -->
+    <section class="panel recta-panel">
+        <h2>En la recta num&eacute;rica</h2>
+        <svg id="recta" viewBox="0 0 760 96" role="img" aria-label="Posición de la fracción en la recta numérica"></svg>
+    </section>
+
+    <!-- Pizzas -->
+    <section class="panel pizzas-panel">
+        <h2>Representaci&oacute;n con pizzas</h2>
+        <div class="pizzas-container" id="pizzas"></div>
+        <p class="hint">Pulsa una porci&oacute;n vac&iacute;a para a&ntilde;adir pizza hasta ella, o una porci&oacute;n llena para retirarla junto con las siguientes.</p>
+    </section>
+
+</main>
+
+<footer>
+    Aplicaci&oacute;n educativa sin conexi&oacute;n &middot; Matem&aacute;ticas EPA &middot; Unidad de fracciones
+</footer>
+
+<script>
+'use strict';
+
+/* =========================================================
+   Constantes y estado
+   ========================================================= */
+const MAX_DEN = 16;
+const MAX_PIZZAS = 6;
+const CANVAS_SIZE = 420;          // coordenadas lógicas
+const PIZZA_RADIUS = 150;
+const CRUST_WIDTH = 30;
+const START_ANGLE = -Math.PI / 2; // primera porción arriba
+
+const numeratorInput   = document.getElementById('numerator');
+const denominatorInput = document.getElementById('denominator');
+const pizzasContainer  = document.getElementById('pizzas');
+const showLabelsInput  = document.getElementById('show-labels');
+
+const EXAMPLES = [[1,2],[3,4],[4,4],[5,4],[7,3],[11,8]];
+
+/* =========================================================
+   Utilidades
+   ========================================================= */
+
+// Generador pseudoaleatorio con semilla (mulberry32):
+// la textura de cada pizza es estable y no "parpadea" al escribir.
+function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+
+// Formato RAE: coma decimal, espacio fino antes de %
+function fmtNumber(v, decimals) {
+    const factor = Math.pow(10, decimals);
+    const rounded = Math.round(v * factor) / factor;
+    let s = rounded.toFixed(decimals).replace(/0+$/, '').replace(/[.]$/, '');
+    return s.replace('.', ',');
+}
+
+function isTerminating(num, den) {
+    // Una fracción tiene decimal exacto si den/mcd solo tiene factores 2 y 5
+    let d = den / gcd(num || den, den);
+    while (d % 2 === 0) d /= 2;
+    while (d % 5 === 0) d /= 5;
+    return d === 1;
+}
+
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+/* ---------- Números en letras (0–96) ---------- */
+const UNIDADES = ['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve',
+    'diez','once','doce','trece','catorce','quince','diecis\u00e9is','diecisiete','dieciocho','diecinueve',
+    'veinte','veintiuno','veintid\u00f3s','veintitr\u00e9s','veinticuatro','veinticinco','veintis\u00e9is',
+    'veintisiete','veintiocho','veintinueve'];
+const DECENAS = ['','','','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+
+function numeroEnLetras(n) {
+    if (n < 30) return UNIDADES[n];
+    const d = Math.floor(n / 10), u = n % 10;
+    return u === 0 ? DECENAS[d] : DECENAS[d] + ' y ' + UNIDADES[u];
+}
+
+// Apócope delante de sustantivo: uno → un, veintiuno → veintiún…
+function apocopar(palabra) {
+    if (palabra === 'uno') return 'un';
+    if (palabra.endsWith(' y uno')) return palabra.slice(0, -1);       // treinta y uno → treinta y un
+    if (palabra.endsWith('uno')) return palabra.slice(0, -3) + '\u00fan'; // veintiuno → veintiún
+    return palabra;
+}
+
+const NOMBRE_DEN = {
+    2:['medio','medios'], 3:['tercio','tercios'], 4:['cuarto','cuartos'],
+    5:['quinto','quintos'], 6:['sexto','sextos'], 7:['s\u00e9ptimo','s\u00e9ptimos'],
+    8:['octavo','octavos'], 9:['noveno','novenos'], 10:['d\u00e9cimo','d\u00e9cimos'],
+    11:['onceavo','onceavos'], 12:['doceavo','doceavos'], 13:['treceavo','treceavos'],
+    14:['catorceavo','catorceavos'], 15:['quinceavo','quinceavos'], 16:['dieciseisavo','dieciseisavos']
+};
+
+function lecturaFraccion(num, den) {
+    if (den === 1) {
+        const p = numeroEnLetras(num);
+        return num === 1 ? 'una unidad' : p + ' unidades';
+    }
+    const nombres = NOMBRE_DEN[den];
+    if (num === 1) return 'un ' + nombres[0];
+    return apocopar(numeroEnLetras(num)) + ' ' + nombres[1];
+}
+
+function fracHTML(n, d) {
+    return '<span class="frac"><span class="num">' + n + '</span><span class="den">' + d + '</span></span>';
+}
+
+/* =========================================================
+   Lectura y validación del estado
+   ========================================================= */
+function readState() {
+    let den = clamp(parseInt(denominatorInput.value, 10) || 1, 1, MAX_DEN);
+    let num = clamp(parseInt(numeratorInput.value, 10) || 0, 0, den * MAX_PIZZAS);
+    return { num, den };
+}
+
+function writeState(num, den) {
+    denominatorInput.value = den;
+    numeratorInput.value = num;
+}
+
+/* =========================================================
+   Panel de información
+   ========================================================= */
+function updateInfo(num, den) {
+    const lectura = document.getElementById('info-lectura');
+    const signif  = document.getElementById('info-significado');
+    const tipo    = document.getElementById('info-tipo');
+    const tipoExp = document.getElementById('info-tipo-exp');
+    const mixto   = document.getElementById('info-mixto');
+    const mixtoEx = document.getElementById('info-mixto-exp');
+    const dec     = document.getElementById('info-decimal');
+    const pct     = document.getElementById('info-porcentaje');
+
+    lectura.innerHTML = fracHTML(num, den) + ' &rarr; ' + lecturaFraccion(num, den);
+    signif.textContent = den === 1
+        ? 'Cada pizza entera es una unidad.'
+        : 'Cada pizza se divide en ' + den + ' porciones iguales y tomamos ' + num + '.';
+
+    tipo.className = 'badge';
+    if (num === 0) {
+        tipo.classList.add('nula');
+        tipo.textContent = 'Fracci\u00f3n nula';
+        tipoExp.textContent = 'El numerador es 0: no tomamos ninguna porci\u00f3n. Vale 0.';
+    } else if (num < den) {
+        tipo.classList.add('propia');
+        tipo.textContent = 'Fracci\u00f3n propia';
+        tipoExp.textContent = 'El numerador es menor que el denominador: vale menos que 1 (menos de una pizza).';
+    } else if (num === den) {
+        tipo.classList.add('unidad');
+        tipo.textContent = 'Igual a la unidad';
+        tipoExp.textContent = 'Numerador y denominador coinciden: es exactamente una pizza entera.';
+    } else {
+        tipo.classList.add('impropia');
+        tipo.textContent = 'Fracci\u00f3n impropia';
+        tipoExp.textContent = 'El numerador es mayor que el denominador: vale m\u00e1s que 1 (m\u00e1s de una pizza).';
+    }
+
+    const entero = Math.floor(num / den);
+    const resto = num % den;
+    if (num > den && resto !== 0) {
+        mixto.innerHTML = fracHTML(num, den) + ' <span style="color:var(--ink-soft)">=</span> ' +
+            entero + ' <span style="color:var(--ink-soft)">+</span> ' + fracHTML(resto, den);
+        mixtoEx.textContent = entero === 1
+            ? 'Una pizza entera y ' + lecturaFraccion(resto, den) + ' m\u00e1s.'
+            : entero + ' pizzas enteras y ' + lecturaFraccion(resto, den) + ' m\u00e1s.';
+    } else if (num >= den && resto === 0 && num !== 0) {
+        mixto.innerHTML = fracHTML(num, den) + ' <span style="color:var(--ink-soft)">=</span> ' + entero;
+        mixtoEx.textContent = entero === 1 ? 'Exactamente una pizza entera.' : 'Exactamente ' + entero + ' pizzas enteras.';
+    } else {
+        mixto.innerHTML = '&mdash;';
+        mixtoEx.textContent = 'Solo se usa cuando la fracci\u00f3n es impropia (mayor que 1).';
+    }
+
+    const valor = num / den;
+    if (isTerminating(num, den)) {
+        dec.textContent = fmtNumber(valor, 4);
+        pct.textContent = fmtNumber(valor * 100, 2) + ' % de una pizza';
+    } else {
+        dec.textContent = '\u2248 ' + fmtNumber(valor, 3);
+        pct.textContent = '\u2248 ' + fmtNumber(valor * 100, 1) + ' % de una pizza';
+    }
+}
+
+/* =========================================================
+   Recta numérica (SVG)
+   ========================================================= */
+function updateRecta(num, den) {
+    const svg = document.getElementById('recta');
+    const valor = num / den;
+    const L = Math.max(1, Math.ceil(valor) || 1);   // último entero mostrado
+    const W = 760, H = 96, x0 = 40, x1 = W - 40, y = 62;
+    const escala = (x1 - x0) / L;
+    let s = '';
+
+    // Eje
+    s += '<line x1="' + (x0 - 12) + '" y1="' + y + '" x2="' + (x1 + 12) + '" y2="' + y +
+         '" stroke="#16324f" stroke-width="3" stroke-linecap="round"/>';
+
+    // Marcas menores (múltiplos de 1/den)
+    if (den > 1) {
+        for (let i = 0; i <= L * den; i++) {
+            if (i % den === 0) continue;
+            const x = x0 + (i / den) * escala;
+            s += '<line x1="' + x + '" y1="' + (y - 6) + '" x2="' + x + '" y2="' + (y + 6) +
+                 '" stroke="#2ca6a4" stroke-width="1.5"/>';
+        }
+    }
+
+    // Enteros
+    for (let i = 0; i <= L; i++) {
+        const x = x0 + i * escala;
+        s += '<line x1="' + x + '" y1="' + (y - 11) + '" x2="' + x + '" y2="' + (y + 11) +
+             '" stroke="#16324f" stroke-width="3"/>';
+        s += '<text x="' + x + '" y="' + (y + 30) + '" text-anchor="middle" ' +
+             'font-family="Palatino, Georgia, serif" font-size="18" font-weight="bold" fill="#16324f">' + i + '</text>';
+    }
+
+    // Marcador de la fracción
+    const xm = x0 + valor * escala;
+    s += '<line x1="' + xm + '" y1="' + (y - 26) + '" x2="' + xm + '" y2="' + y +
+         '" stroke="#e8a13c" stroke-width="3"/>';
+    s += '<circle cx="' + xm + '" cy="' + y + '" r="8" fill="#e8a13c" stroke="#c07f1f" stroke-width="2"/>';
+    s += '<text x="' + xm + '" y="' + (y - 34) + '" text-anchor="middle" ' +
+         'font-family="Palatino, Georgia, serif" font-size="20" font-weight="bold" fill="#c07f1f">' +
+         num + '/' + den + '</text>';
+
+    svg.innerHTML = s;
+}
+
+/* =========================================================
+   Dibujo de la pizza
+   ========================================================= */
+function drawPizza(canvas, slices, filledSlices, seed, showLabels) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = CANVAS_SIZE * dpr;
+    canvas.height = CANVAS_SIZE * dpr;
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+    const rand = mulberry32(seed);
+    const cx = CANVAS_SIZE / 2;
+    const cy = CANVAS_SIZE / 2;
+    const R = PIZZA_RADIUS;
+    const anglePerSlice = (Math.PI * 2) / slices;
+    const full = filledSlices >= slices;
+
+    /* ---------- Bandeja ---------- */
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 14, R + 42, R + 34, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(22, 50, 79, 0.18)';
+    ctx.filter = 'blur(10px)';
+    ctx.fill();
+    ctx.restore();
+
+    const trayR = R + 34;
+    const trayGrad = ctx.createRadialGradient(cx - 50, cy - 60, 20, cx, cy, trayR);
+    trayGrad.addColorStop(0, '#f2f2f0');
+    trayGrad.addColorStop(0.55, '#dfe0de');
+    trayGrad.addColorStop(0.85, '#c2c4c2');
+    trayGrad.addColorStop(1, '#a8aba9');
+    ctx.beginPath();
+    ctx.arc(cx, cy, trayR, 0, Math.PI * 2);
+    ctx.fillStyle = trayGrad;
+    ctx.fill();
+    ctx.strokeStyle = '#8f9290';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    // Aro interior de la bandeja
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 14, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(120, 124, 122, 0.55)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    /* ---------- Guías de las porciones (sobre la bandeja) ---------- */
+    ctx.save();
+    ctx.setLineDash([7, 7]);
+    ctx.strokeStyle = 'rgba(22, 50, 79, 0.35)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < slices; i++) {
+        const a = START_ANGLE + i * anglePerSlice;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(a) * (R + 8), cy + Math.sin(a) * (R + 8));
+        ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 8, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    if (filledSlices > 0) {
+        /* ---------- Recorte: solo la región de porciones presentes ---------- */
+        ctx.save();
+        ctx.beginPath();
+        if (full) {
+            ctx.arc(cx, cy, R + 4, 0, Math.PI * 2);
+        } else {
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, R + 4, START_ANGLE, START_ANGLE + filledSlices * anglePerSlice);
+            ctx.closePath();
+        }
+        ctx.clip();
+
+        drawPizzaBody(ctx, cx, cy, R, rand, slices);
+
+        /* ---------- Cortes internos ---------- */
+        const nCortes = full ? slices : filledSlices + 1;
+        for (let i = 0; i < nCortes; i++) {
+            const a = START_ANGLE + i * anglePerSlice;
+            const ex = cx + Math.cos(a) * R;
+            const ey = cy + Math.sin(a) * R;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(ex, ey);
+            ctx.strokeStyle = 'rgba(70, 40, 15, 0.85)';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(ex, ey);
+            ctx.strokeStyle = 'rgba(250, 230, 190, 0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        /* ---------- Borde de corte (masa vista) en los extremos ---------- */
+        if (!full) {
+            const edges = [START_ANGLE, START_ANGLE + filledSlices * anglePerSlice];
+            edges.forEach(a => {
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+                ctx.strokeStyle = '#e8c170';
+                ctx.lineWidth = 5;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+                ctx.strokeStyle = 'rgba(120, 75, 30, 0.7)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            });
+        }
+    }
+
+    /* ---------- Etiquetas 1/n en cada porción presente ---------- */
+    if (showLabels && slices > 1) {
+        for (let i = 0; i < filledSlices; i++) {
+            const a = START_ANGLE + (i + 0.5) * anglePerSlice;
+            const lx = cx + Math.cos(a) * R * 0.62;
+            const ly = cy + Math.sin(a) * R * 0.62;
+            ctx.beginPath();
+            ctx.arc(lx, ly, 21, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 253, 247, 0.92)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(22, 50, 79, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = '#16324f';
+            ctx.font = 'bold 15px Palatino, Georgia, serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('1/' + slices, lx, ly + 1);
+        }
+    }
+}
+
+/* Cuerpo de la pizza: masa, borde, salsa, queso e ingredientes.
+   Todas las texturas usan el generador con semilla → dibujo estable. */
+function drawPizzaBody(ctx, cx, cy, R, rand, slices) {
+    // Masa base
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    const doughGrad = ctx.createRadialGradient(cx, cy - 50, 0, cx, cy, R);
+    doughGrad.addColorStop(0, '#f8e5b8');
+    doughGrad.addColorStop(0.4, '#f0d690');
+    doughGrad.addColorStop(0.7, '#e8c170');
+    doughGrad.addColorStop(0.9, '#d4a85c');
+    doughGrad.addColorStop(1, '#b88a48');
+    ctx.fillStyle = doughGrad;
+    ctx.fill();
+
+    // Borde
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.arc(cx, cy, R - CRUST_WIDTH, 0, Math.PI * 2, true);
+    const crustGrad = ctx.createRadialGradient(cx, cy - 70, R - CRUST_WIDTH, cx, cy, R);
+    crustGrad.addColorStop(0, '#ffe8c0');
+    crustGrad.addColorStop(0.3, '#f0d090');
+    crustGrad.addColorStop(0.6, '#d4a574');
+    crustGrad.addColorStop(0.85, '#b8874e');
+    crustGrad.addColorStop(1, '#8b6428');
+    ctx.fillStyle = crustGrad;
+    ctx.fill();
+
+    // Burbujas del borde
+    for (let i = 0; i < 18; i++) {
+        const a = (i / 18) * Math.PI * 2 + rand() * 0.2;
+        const b = 5 + rand() * 8;
+        const x = cx + Math.cos(a) * (R - CRUST_WIDTH / 2 + (rand() - 0.5) * 10);
+        const y = cy + Math.sin(a) * (R - CRUST_WIDTH / 2) + (rand() - 0.5) * 7;
+        ctx.beginPath();
+        ctx.arc(x, y, b, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(210, 170, 110, 0.5)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x - b * 0.3, y - b * 0.2, b * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(245, 225, 190, 0.7)';
+        ctx.fill();
+    }
+
+    // Textura del borde
+    for (let i = 0; i < 110; i++) {
+        const a = rand() * Math.PI * 2;
+        const d = R - rand() * CRUST_WIDTH;
+        ctx.fillStyle = 'rgba(' + Math.round(155 + rand() * 60) + ',' + Math.round(105 + rand() * 50) + ',' +
+                        Math.round(35 + rand() * 30) + ',' + (0.25 + rand() * 0.5).toFixed(2) + ')';
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, rand() * 3 + 0.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Salsa
+    const sauceR = R - CRUST_WIDTH - 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, sauceR, 0, Math.PI * 2);
+    const sauceGrad = ctx.createRadialGradient(cx - 55, cy - 40, 0, cx, cy, sauceR);
+    sauceGrad.addColorStop(0, '#ff7a65');
+    sauceGrad.addColorStop(0.5, '#f06449');
+    sauceGrad.addColorStop(1, '#c8453a');
+    ctx.fillStyle = sauceGrad;
+    ctx.fill();
+
+    // Queso
+    const cheeseR = sauceR - 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, cheeseR, 0, Math.PI * 2);
+    const cheeseGrad = ctx.createRadialGradient(cx - 60, cy - 55, 0, cx, cy, cheeseR);
+    cheeseGrad.addColorStop(0, '#fffdf2');
+    cheeseGrad.addColorStop(0.45, '#fff3d8');
+    cheeseGrad.addColorStop(0.8, '#ffe8b3');
+    cheeseGrad.addColorStop(1, '#f0d488');
+    ctx.fillStyle = cheeseGrad;
+    ctx.fill();
+
+    // Burbujas de queso
+    for (let i = 0; i < 120; i++) {
+        const a = rand() * Math.PI * 2;
+        const d = rand() * (cheeseR - 12);
+        const x = cx + Math.cos(a) * d;
+        const y = cy + Math.sin(a) * d;
+        const s = rand() * 6 + 1;
+        ctx.beginPath();
+        ctx.arc(x, y, s, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, ' + (0.25 + rand() * 0.45).toFixed(2) + ')';
+        ctx.fill();
+    }
+
+    // Champiñones
+    const nMush = Math.min(22, 6 + slices * 2);
+    const mushrooms = [];
+    for (let i = 0; i < nMush; i++) {
+        const a = (i / nMush) * Math.PI * 2 + rand() * 0.3;
+        const d = (0.2 + rand() * 0.72) * (cheeseR - 22);
+        mushrooms.push({ x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d,
+                         rot: rand() * Math.PI * 2, size: 15 + rand() * 9 });
+    }
+    mushrooms.forEach(m => drawMushroom(ctx, m, rand));
+
+    // Pepperoni
+    const nPep = Math.min(26, 8 + slices * 2);
+    const peps = [];
+    for (let i = 0; i < nPep; i++) {
+        const a = (i / nPep) * Math.PI * 2 + rand() * 0.2;
+        const ring = i % 3;
+        const d = (ring * 0.3 + 0.16 + rand() * 0.16) * (cheeseR - 16);
+        peps.push({ x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, size: 13 + rand() * 7 });
+    }
+    peps.forEach(p => drawPepperoni(ctx, p, rand));
+
+    // Hierbas
+    for (let i = 0; i < 55; i++) {
+        const a = rand() * Math.PI * 2;
+        const d = rand() * (cheeseR - 12);
+        ctx.save();
+        ctx.translate(cx + Math.cos(a) * d, cy + Math.sin(a) * d);
+        ctx.rotate(rand() * Math.PI * 2);
+        ctx.fillStyle = rand() > 0.5
+            ? 'rgba(' + Math.round(rand() * 35 + 15) + ',' + Math.round(rand() * 65 + 85) + ',' + Math.round(rand() * 35 + 15) + ',0.8)'
+            : 'rgba(' + Math.round(rand() * 45 + 75) + ',' + Math.round(rand() * 55 + 35) + ',' + Math.round(rand() * 25 + 15) + ',0.7)';
+        ctx.fillRect(-1.3, -3.5, 2.6, 7);
+        ctx.restore();
+    }
+
+    // Brillo del queso
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx - 45, cy - 55, cheeseR * 0.55, 0, Math.PI * 2);
+    const shine = ctx.createRadialGradient(cx - 45, cy - 55, 0, cx - 45, cy - 55, cheeseR * 0.55);
+    shine.addColorStop(0, 'rgba(255,255,255,0.4)');
+    shine.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = shine;
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawMushroom(ctx, m, rand) {
+    const s = m.size;
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.rot);
+
+    ctx.beginPath();
+    ctx.ellipse(2, 3, s * 0.58, s * 0.52, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 0.58, s * 0.52, 0, 0, Math.PI * 2);
+    const g = ctx.createRadialGradient(-s * 0.28, -s * 0.28, 0, 0, 0, s * 0.65);
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(0.4, '#efe6d8');
+    g.addColorStop(0.8, '#c8b494');
+    g.addColorStop(1, '#a89070');
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = '#8a7355';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(s * 0.13, s * 0.05, s * 0.3, s * 0.26, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#a89073';
+    ctx.fill();
+    ctx.strokeStyle = '#685840';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(90, 75, 60, 0.6)';
+    ctx.lineWidth = 0.9;
+    for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(s * 0.13, s * 0.05);
+        ctx.lineTo(s * 0.13 + Math.cos(a) * s * 0.28, s * 0.05 + Math.sin(a) * s * 0.24);
+        ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.ellipse(-s * 0.3, -s * 0.25, s * 0.22, s * 0.15, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawPepperoni(ctx, p, rand) {
+    const s = p.size;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+
+    ctx.beginPath();
+    ctx.arc(2.5, 3.5, s, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.32)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, s, 0, Math.PI * 2);
+    const g = ctx.createRadialGradient(-s * 0.45, -s * 0.45, 0, 0, 0, s);
+    g.addColorStop(0, '#ff8575');
+    g.addColorStop(0.4, '#f05a48');
+    g.addColorStop(0.8, '#c83428');
+    g.addColorStop(1, '#a82820');
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = '#6b1010';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    for (let j = 0; j < 7; j++) {
+        const a = rand() * Math.PI * 2;
+        const d = rand() * (s * 0.7);
+        const gs = rand() * 3 + 1;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * d, Math.sin(a) * d, gs, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 250, 240, 0.9)';
+        ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(-s * 0.4, -s * 0.4, s * 0.4, 0, Math.PI * 2);
+    const sh = ctx.createRadialGradient(-s * 0.4, -s * 0.4, 0, -s * 0.4, -s * 0.4, s * 0.4);
+    sh.addColorStop(0, 'rgba(255, 180, 170, 0.6)');
+    sh.addColorStop(1, 'rgba(255, 150, 140, 0)');
+    ctx.fillStyle = sh;
+    ctx.fill();
+    ctx.restore();
+}
+
+/* =========================================================
+   Render principal
+   ========================================================= */
+function updateAll() {
+    const { num, den } = readState();
+    writeState(num, den);
+
+    updateInfo(num, den);
+    updateRecta(num, den);
+
+    const totalPizzas = Math.max(1, Math.ceil(num / den));
+    pizzasContainer.innerHTML = '';
+
+    for (let i = 0; i < totalPizzas; i++) {
+        const remaining = num - i * den;
+        const filled = clamp(remaining, 0, den);
+
+        const item = document.createElement('div');
+        item.className = 'pizza-item';
+
+        const canvas = document.createElement('canvas');
+        canvas.setAttribute('role', 'img');
+        canvas.setAttribute('aria-label',
+            'Pizza ' + (i + 1) + ' con ' + filled + ' de ' + den + ' porciones');
+        canvas.dataset.pizzaIndex = i;
+        canvas.addEventListener('click', onPizzaClick);
+
+        const caption = document.createElement('div');
+        caption.className = 'pizza-caption';
+        if (filled === den) {
+            caption.innerHTML = den + '/' + den + ' <span class="eq">= 1</span>';
+        } else if (filled === 0) {
+            caption.innerHTML = '0/' + den + ' <span class="eq">= 0</span>';
+        } else {
+            caption.textContent = filled + '/' + den;
+        }
+
+        item.appendChild(canvas);
+        item.appendChild(caption);
+        pizzasContainer.appendChild(item);
+
+        // Semilla estable por pizza y denominador: la textura no cambia al teclear
+        drawPizza(canvas, den, filled, den * 1009 + i * 97 + 17, showLabelsInput.checked);
+    }
+}
+
+/* ---------- Interacción: pulsar porciones ---------- */
+function onPizzaClick(e) {
+    const canvas = e.currentTarget;
+    const { num, den } = readState();
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width * CANVAS_SIZE;
+    const y = (e.clientY - rect.top) / rect.height * CANVAS_SIZE;
+    const dx = x - CANVAS_SIZE / 2;
+    const dy = y - CANVAS_SIZE / 2;
+    if (Math.hypot(dx, dy) > PIZZA_RADIUS + 34) return; // fuera de la bandeja
+
+    let a = Math.atan2(dy, dx) - START_ANGLE;
+    a = ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const slice = Math.floor(a / ((Math.PI * 2) / den));
+    const globalIndex = parseInt(canvas.dataset.pizzaIndex, 10) * den + slice;
+
+    // Porción vacía → llenar hasta ella; porción llena → retirarla y las siguientes
+    const nuevo = globalIndex < num ? globalIndex : globalIndex + 1;
+    writeState(clamp(nuevo, 0, den * MAX_PIZZAS), den);
+    updateAll();
+}
+
+/* ---------- Eventos ---------- */
+numeratorInput.addEventListener('input', updateAll);
+denominatorInput.addEventListener('input', updateAll);
+showLabelsInput.addEventListener('change', updateAll);
+
+document.getElementById('num-plus').addEventListener('click', () => {
+    const { num, den } = readState();
+    writeState(clamp(num + 1, 0, den * MAX_PIZZAS), den); updateAll();
+});
+document.getElementById('num-minus').addEventListener('click', () => {
+    const { num, den } = readState();
+    writeState(clamp(num - 1, 0, den * MAX_PIZZAS), den); updateAll();
+});
+document.getElementById('den-plus').addEventListener('click', () => {
+    const { num, den } = readState();
+    writeState(num, clamp(den + 1, 1, MAX_DEN)); updateAll();
+});
+document.getElementById('den-minus').addEventListener('click', () => {
+    const { num, den } = readState();
+    const d = clamp(den - 1, 1, MAX_DEN);
+    writeState(clamp(num, 0, d * MAX_PIZZAS), d); updateAll();
+});
+
+// Ejemplos rápidos
+const examplesRow = document.getElementById('examples-row');
+EXAMPLES.forEach(([n, d]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'example-btn';
+    b.textContent = n + '/' + d;
+    b.addEventListener('click', () => { writeState(n, d); updateAll(); });
+    examplesRow.appendChild(b);
+});
+
+updateAll();
+</script>
+</body>
+</html>

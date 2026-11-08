@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Descomposición en factores primos · M.C.D. y m.c.m.</title>
+<style>
+/* ============================================================
+   PALETA Y TIPOGRAFÍA (convención: navy / turquesa / ámbar / verde / rojo)
+   ============================================================ */
+:root{
+    --navy:      #1f3a5f;
+    --navy-dark: #16293f;
+    --turquesa:  #0e7c86;
+    --turquesa-claro: #e0f4f5;
+    --ambar:     #b7791f;
+    --ambar-claro: #fdf3e0;
+    --verde:     #2e7d32;
+    --verde-claro: #e8f5e9;
+    --rojo:      #b03a2e;
+    --rojo-claro: #fdecea;
+    --gris-borde: #dde3ea;
+    --gris-fondo: #f6f8fa;
+    --tinta: #22303f;
+
+    --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-math: "Palatino Linotype", Palatino, "URW Palladio L", "Book Antiqua", Georgia, serif;
+    --math-size: 1.1rem;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+    font-family: var(--font-body);
+    color: var(--tinta);
+    background: linear-gradient(150deg, var(--navy) 0%, var(--turquesa) 100%);
+    min-height:100vh;
+    padding:24px 14px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+}
+
+.container{
+    width:100%;
+    max-width:960px;
+    background:#fff;
+    border-radius:18px;
+    padding:34px 32px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.28);
+}
+
+header.cabecera{text-align:center;margin-bottom:24px}
+h1{
+    color:var(--navy);
+    font-size:1.7rem;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+}
+.subtitulo{
+    color:var(--turquesa);
+    font-weight:600;
+    margin-top:6px;
+    font-size:1rem;
+}
+
+/* ---------- Notación matemática ---------- */
+.math{
+    font-family: var(--font-math);
+    font-size: var(--math-size);
+    line-height:1.35;
+}
+.math sup{font-size:.72em}
+
+/* ---------- Sección de entrada ---------- */
+.input-section{margin-bottom:14px}
+
+.quantity-selector{
+    display:flex;gap:12px;align-items:center;justify-content:center;
+    flex-wrap:wrap;margin-bottom:16px;
+}
+.quantity-selector label{font-weight:600}
+.quantity-selector input{
+    width:80px;padding:10px;border:2px solid var(--gris-borde);
+    border-radius:10px;text-align:center;font-size:1rem;
+}
+
+.numbers-container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:14px;margin-bottom:14px;
+}
+.number-input-wrapper label{
+    color:var(--navy);font-weight:600;margin-bottom:6px;display:block;font-size:.92rem;
+}
+input[type="text"].campo-numero, input[type="number"]{
+    width:100%;padding:10px;border-radius:10px;border:2px solid var(--gris-borde);
+    font-size:1rem;font-family:var(--font-math);
+}
+input:focus{outline:none;border-color:var(--turquesa);box-shadow:0 0 0 3px rgba(14,124,134,.15)}
+
+.button-container{
+    display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px;
+}
+button{
+    border:0;padding:12px 20px;border-radius:10px;font-weight:700;
+    font-size:.95rem;cursor:pointer;color:#fff;
+    background:var(--navy);
+    transition:transform .15s, filter .15s;
+}
+button.principal{background:linear-gradient(135deg,var(--turquesa) 0%, var(--navy) 100%)}
+button.secundario{background:var(--ambar)}
+button.terciario{background:var(--navy);opacity:.85}
+button:hover{transform:translateY(-2px);filter:brightness(1.06)}
+button:active{transform:translateY(0)}
+button:focus-visible{outline:3px solid var(--ambar);outline-offset:2px}
+
+/* ---------- Mensajes ---------- */
+.error{
+    background:var(--rojo-claro);color:var(--rojo);padding:12px 14px;
+    border-radius:8px;border-left:4px solid var(--rojo);font-weight:600;margin-top:10px;
+}
+.aviso-primo{
+    display:inline-block;background:var(--ambar-claro);color:var(--ambar);
+    border:1px solid var(--ambar);border-radius:999px;
+    padding:2px 12px;font-size:.85rem;font-weight:700;margin-top:8px;
+}
+
+/* ---------- Resultados: tablas de factorización ---------- */
+.results{margin-top:18px}
+
+.factorization-container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:16px;margin-bottom:16px;
+}
+.factorization{
+    background:var(--gris-fondo);padding:18px;border-radius:12px;
+    border:1px solid var(--gris-borde);
+    text-align:center;
+}
+.factorization h3{color:var(--navy);margin-bottom:12px;font-size:1.02rem}
+
+.division-table{display:table;margin:0 auto 10px auto;border-collapse:collapse}
+.division-row{display:table-row}
+@media (prefers-reduced-motion: no-preference){
+    .division-row{
+        animation:aparecer .35s both;
+        animation-delay:calc(var(--i) * 110ms);
+    }
+}
+@keyframes aparecer{
+    from{opacity:0;transform:translateY(-6px)}
+    to{opacity:1;transform:none}
+}
+.division-table .numero{
+    display:table-cell;text-align:right;padding:5px 14px;
+    border-right:3px solid var(--navy);font-weight:700;
+}
+.division-table .primo{
+    display:table-cell;text-align:left;padding:5px 14px;font-weight:700;
+}
+
+.formula{margin-top:8px;font-weight:600;color:var(--navy)}
+.formula .valor{font-weight:800}
+
+/* ---------- Chips de primos con color ---------- */
+[data-primo]{border-radius:6px;padding:0 4px;transition:background .15s, outline .15s;cursor:default}
+[data-primo].hl{outline:2px solid currentColor;background:rgba(0,0,0,.05)}
+
+/* ---------- Caja MCD / mcm ---------- */
+.result-box{
+    background:var(--verde-claro);padding:16px;border-radius:12px;margin-bottom:16px;
+    border:1px solid #cde6cf;
+}
+.result-item{
+    background:#fff;padding:14px;border-radius:10px;border-left:5px solid var(--verde);
+    margin-bottom:12px;
+}
+.result-item:last-child{margin-bottom:0}
+.result-item h4{color:var(--verde);margin-bottom:6px;font-size:1rem}
+.result-item .regla{
+    font-size:.85rem;color:#4a5a4c;margin-top:6px;font-family:var(--font-body);
+}
+.result-item.mcm{border-left-color:var(--ambar)}
+.result-item.mcm h4{color:var(--ambar)}
+.comprobacion{
+    background:#fff;border-left:5px solid var(--turquesa);
+    padding:12px 14px;border-radius:10px;font-size:.95rem;
+}
+.comprobacion strong{color:var(--turquesa)}
+
+/* ---------- Tabla comparativa de exponentes ---------- */
+.tabla-exponentes-wrap{
+    overflow-x:auto;margin-bottom:16px;background:#fff;border-radius:12px;
+    border:1px solid var(--gris-borde);
+}
+.tabla-exponentes{width:100%;border-collapse:collapse;text-align:center;font-size:.95rem}
+.tabla-exponentes caption{
+    caption-side:top;text-align:left;padding:12px 14px 6px;
+    font-weight:700;color:var(--navy);
+}
+.tabla-exponentes th, .tabla-exponentes td{padding:8px 12px;border-bottom:1px solid #eef1f5}
+.tabla-exponentes thead th{background:var(--navy);color:#fff;font-weight:600}
+.tabla-exponentes .col-mcd{background:var(--verde-claro);font-weight:700;color:var(--verde)}
+.tabla-exponentes .col-mcm{background:var(--ambar-claro);font-weight:700;color:var(--ambar)}
+.tabla-exponentes td.cero{color:#9aa6b3}
+.tabla-exponentes tfoot td{font-size:.8rem;color:#5a6a7a;text-align:left;padding:10px 14px;font-family:var(--font-body)}
+
+/* ---------- Teoría (details) ---------- */
+details.teoria{
+    background:var(--turquesa-claro);border:1px solid #bfe3e6;border-radius:12px;
+    margin-top:16px;padding:0;
+}
+details.teoria summary{
+    cursor:pointer;font-weight:700;color:var(--turquesa);
+    padding:14px 16px;list-style-position:inside;
+}
+details.teoria[open] summary{border-bottom:1px solid #bfe3e6}
+details.teoria .cuerpo{padding:14px 16px;font-size:.95rem;line-height:1.55}
+details.teoria .cuerpo p{margin-bottom:10px}
+details.teoria .cuerpo p:last-child{margin-bottom:0}
+details.teoria .cuerpo em{color:var(--navy);font-style:normal;font-weight:700}
+
+/* ---------- Modo práctica ---------- */
+.practica{
+    margin-top:18px;background:var(--ambar-claro);border:1px solid #f0dcb4;
+    border-radius:12px;padding:18px;display:none;
+}
+.practica.visible{display:block}
+.practica h2{color:var(--ambar);font-size:1.15rem;margin-bottom:10px}
+.practica .enunciado{margin-bottom:10px;font-size:1rem}
+.practica .enunciado .num-reto{font-family:var(--font-math);font-weight:800;font-size:1.25rem;color:var(--navy)}
+.practica .fila{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.practica input{max-width:280px}
+.practica .ayuda-formato{font-size:.82rem;color:#7a6a45;margin-top:8px}
+.feedback{margin-top:12px;padding:12px 14px;border-radius:10px;font-weight:600;display:none}
+.feedback.ok{display:block;background:var(--verde-claro);color:var(--verde);border-left:4px solid var(--verde)}
+.feedback.mal{display:block;background:var(--rojo-claro);color:var(--rojo);border-left:4px solid var(--rojo)}
+.feedback .detalle{font-weight:400;margin-top:6px;color:var(--tinta)}
+
+/* ---------- Tabla de primos ---------- */
+#tablaPrimosContainer{margin-top:24px;display:none}
+#tablaPrimosContainer.visible{display:block}
+.primos-header{text-align:center;margin-bottom:14px;color:var(--navy);font-size:1.3rem}
+.table-wrapper-primos{
+    background:#fff;border-radius:12px;overflow:hidden;
+    border:1px solid var(--gris-borde);
+    box-shadow:0 4px 16px rgba(0,0,0,.07);
+    max-height:70vh;overflow-y:auto;
+}
+#tablaPrimos{width:100%;border-collapse:collapse;font-size:.85rem;font-family:var(--font-math)}
+#tablaPrimos th, #tablaPrimos td{padding:7px;text-align:center;border-bottom:1px solid #edf2f7}
+#tablaPrimos th{
+    background:var(--navy);color:#fff;font-weight:600;padding:10px;
+    position:sticky;top:0;font-family:var(--font-body);
+}
+#tablaPrimos th:nth-child(2n), #tablaPrimos td:nth-child(2n){border-right:4px solid var(--navy)}
+#tablaPrimos th:last-child, #tablaPrimos td:last-child{border-right:none}
+#tablaPrimos tr:hover{background:#f4f9fb}
+
+footer.pie{
+    margin-top:22px;text-align:center;font-size:.78rem;color:#8a97a5;
+}
+
+@media (max-width:600px){
+    .container{padding:24px 16px}
+    h1{font-size:1.3rem}
+    #tablaPrimos th, #tablaPrimos td{padding:5px;font-size:.74rem}
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <header class="cabecera">
+        <h1>Descomposición en factores primos</h1>
+        <p class="subtitulo">Factorización · M.C.D. · m.c.m.</p>
+    </header>
+
+    <div class="input-section">
+        <div class="quantity-selector">
+            <label for="cantidad">¿Cuántos números quieres factorizar?</label>
+            <input type="number" id="cantidad" min="1" max="10" value="2" inputmode="numeric" />
+            <button type="button" class="terciario" onclick="generarCampos()">Generar campos</button>
+        </div>
+
+        <div id="numbersContainer" class="numbers-container"></div>
+
+        <div class="button-container">
+            <button type="button" class="principal" onclick="calcular()">Calcular factorización, M.C.D. y m.c.m.</button>
+            <button type="button" class="terciario" onclick="limpiar()">Limpiar</button>
+            <button type="button" class="secundario" id="btnPractica" onclick="togglePractica()">Modo práctica</button>
+            <button type="button" class="terciario" id="btnTablaPrimos" onclick="toggleTablaPrimos()">Ver tabla de primos</button>
+        </div>
+        <div id="errorEntrada"></div>
+    </div>
+
+    <div id="results" class="results" aria-live="polite"></div>
+
+    <!-- ===================== MODO PRÁCTICA ===================== -->
+    <section id="practica" class="practica" aria-live="polite">
+        <h2>Modo práctica</h2>
+        <p class="enunciado">Descompón en factores primos el número
+            <span class="num-reto math" id="numReto">—</span>
+        </p>
+        <div class="fila">
+            <input type="text" class="campo-numero" id="respuestaPractica"
+                   placeholder="Ejemplo: 2^2 · 3 · 5" autocomplete="off" />
+            <button type="button" class="principal" onclick="comprobarPractica()">Comprobar</button>
+            <button type="button" class="terciario" onclick="nuevoReto()">Otro número</button>
+            <button type="button" class="terciario" onclick="verSolucion()">Ver solución</button>
+        </div>
+        <p class="ayuda-formato">Escribe los factores separados por <span class="math">·</span>, <span class="math">x</span> o <span class="math">*</span>, y los exponentes con <span class="math">^</span>. Por ejemplo, para 60: <span class="math">2^2·3·5</span> (también vale <span class="math">2·2·3·5</span>).</p>
+        <div id="feedbackPractica" class="feedback"></div>
+    </section>
+
+    <!-- ===================== TEORÍA ===================== -->
+    <details class="teoria">
+        <summary>¿Cómo se descompone un número en factores primos?</summary>
+        <div class="cuerpo">
+            <p>Se divide el número entre el <em>menor número primo posible</em> (2, 3, 5, 7, 11…) y se repite con el cociente hasta llegar a 1. A la izquierda de la raya se escriben los cocientes y a la derecha los primos entre los que dividimos.</p>
+            <p>Recuerda las <em>reglas de divisibilidad</em>: un número es divisible entre 2 si termina en 0, 2, 4, 6 u 8; entre 3 si la suma de sus cifras es múltiplo de 3; y entre 5 si termina en 0 o en 5.</p>
+            <p>El resultado se escribe como producto de potencias: por ejemplo, <span class="math">60 = 2<sup>2</sup> · 3 · 5</span>.</p>
+        </div>
+    </details>
+
+    <details class="teoria">
+        <summary>¿Qué son el M.C.D. y el m.c.m. y para qué sirven?</summary>
+        <div class="cuerpo">
+            <p>El <em>máximo común divisor (M.C.D.)</em> es el mayor número que divide a todos a la vez. Se calcula tomando los <em>factores primos comunes elevados al menor exponente</em>. Sirve para <em>repartir o trocear en partes iguales lo más grandes posible</em>: por ejemplo, cortar dos cuerdas de 60 m y 84 m en trozos iguales lo más largos posible.</p>
+            <p>El <em>mínimo común múltiplo (m.c.m.)</em> es el menor número que es múltiplo de todos a la vez. Se calcula tomando los <em>factores primos comunes y no comunes elevados al mayor exponente</em>. Sirve para <em>saber cuándo vuelven a coincidir cosas que se repiten</em>: por ejemplo, dos autobuses que salen cada 12 y cada 18 minutos, o para reducir fracciones a común denominador.</p>
+            <p>Propiedad útil para dos números: <span class="math">a · b = M.C.D. · m.c.m.</span></p>
+        </div>
+    </details>
+
+    <!-- ===================== TABLA DE PRIMOS ===================== -->
+    <div id="tablaPrimosContainer">
+        <h2 class="primos-header">Los 1000 primeros números primos</h2>
+        <div class="table-wrapper-primos">
+            <table id="tablaPrimos">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer class="pie">Aplicación educativa sin conexión · EPA Nivel II · Matemáticas</footer>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   CONSTANTES Y UTILIDADES
+   ============================================================ */
+const MAX_VALOR = 9999999; // hasta 7 cifras: la factorización es inmediata
+const COLORES_PRIMOS = ["#0e7c86", "#b7791f", "#2e7d32", "#b03a2e", "#1f3a5f"];
+const _colorAsignado = new Map();
+
+function colorDePrimo(p){
+    if (!_colorAsignado.has(p)) {
+        _colorAsignado.set(p, COLORES_PRIMOS[_colorAsignado.size % COLORES_PRIMOS.length]);
+    }
+    return _colorAsignado.get(p);
+}
+
+/* Formato RAE: sin separador hasta 4 cifras; espacio fino cada 3 a partir de 5 cifras */
+function fmt(n){
+    const s = String(n);
+    if (s.length <= 4) return s;
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F");
+}
+
+function esEnteroValido(texto){
+    return /^\d+$/.test(texto.trim());
+}
+
+function chipPrimo(p){
+    return `<span data-primo="${p}" style="color:${colorDePrimo(p)}">${fmt(p)}</span>`;
+}
+
+function mostrarErrorEntrada(msg){
+    document.getElementById("errorEntrada").innerHTML =
+        msg ? `<div class="error" role="alert">${msg}</div>` : "";
+}
+
+/* ============================================================
+   ENTRADA DE DATOS
+   ============================================================ */
+function generarCampos(){
+    const campoCantidad = document.getElementById("cantidad");
+    const cantidad = parseInt(campoCantidad.value, 10);
+    if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 10) {
+        mostrarErrorEntrada("Indica cuántos números quieres factorizar (entre 1 y 10).");
+        return;
+    }
+    mostrarErrorEntrada("");
+
+    // Conservar los valores ya escritos al regenerar los campos
+    const previos = [];
+    document.querySelectorAll("#numbersContainer input").forEach(el => previos.push(el.value));
+
+    const container = document.getElementById("numbersContainer");
+    let html = "";
+    for (let i = 1; i <= cantidad; i++) {
+        const valorPrevio = previos[i - 1] ? ` value="${previos[i - 1]}"` : "";
+        html += `
+            <div class="number-input-wrapper">
+                <label for="num${i}">Número ${i}</label>
+                <input type="text" inputmode="numeric" class="campo-numero" id="num${i}"
+                       placeholder="p. ej. ${i === 1 ? "60" : "84"}"${valorPrevio} />
+            </div>`;
+    }
+    container.innerHTML = html;
+    document.getElementById("results").innerHTML = "";
+
+    // Intro en cualquier campo numérico dispara el cálculo
+    container.querySelectorAll("input").forEach(el => {
+        el.addEventListener("keydown", ev => {
+            if (ev.key === "Enter") calcular();
+        });
+    });
+}
+
+function limpiar(){
+    document.querySelectorAll("#numbersContainer input").forEach(el => el.value = "");
+    document.getElementById("results").innerHTML = "";
+    mostrarErrorEntrada("");
+    const primero = document.querySelector("#numbersContainer input");
+    if (primero) primero.focus();
+}
+
+/* ============================================================
+   NÚCLEO MATEMÁTICO
+   ============================================================ */
+function factorizar(n){
+    const pasos = [];
+    const factores = {};
+    let actual = n;
+
+    // Factor 2
+    while (actual % 2 === 0) {
+        pasos.push({ numero: actual, primo: 2 });
+        factores[2] = (factores[2] || 0) + 1;
+        actual /= 2;
+    }
+    // Factores impares hasta la raíz cuadrada
+    let divisor = 3;
+    while (divisor * divisor <= actual) {
+        while (actual % divisor === 0) {
+            pasos.push({ numero: actual, primo: divisor });
+            factores[divisor] = (factores[divisor] || 0) + 1;
+            actual /= divisor;
+        }
+        divisor += 2;
+    }
+    // Si queda algo mayor que 1, es primo
+    if (actual > 1) {
+        pasos.push({ numero: actual, primo: actual });
+        factores[actual] = (factores[actual] || 0) + 1;
+    }
+    pasos.push({ numero: 1, primo: "" });
+    return { pasos, factores };
+}
+
+function esPrimo(n){
+    if (n < 2) return false;
+    if (n % 2 === 0) return n === 2;
+    for (let d = 3; d * d <= n; d += 2) {
+        if (n % d === 0) return false;
+    }
+    return true;
+}
+
+function factoresAFormula(factores){
+    const primos = Object.keys(factores).map(Number).sort((a, b) => a - b);
+    return primos.map(p => {
+        const exp = factores[p];
+        return exp === 1 ? chipPrimo(p) : `${chipPrimo(p)}<sup>${exp}</sup>`;
+    }).join(" · ");
+}
+
+function formulaConValor(factores, valor){
+    const primos = Object.keys(factores).map(Number);
+    const esSoloUnPrimoSimple = primos.length === 1 && factores[primos[0]] === 1;
+    const f = factoresAFormula(factores);
+    if (!f) return `<span class="valor">${fmt(valor)}</span>`;
+    return esSoloUnPrimoSimple
+        ? `<span class="valor">${fmt(valor)}</span>`
+        : `${f} = <span class="valor">${fmt(valor)}</span>`;
+}
+
+function calcularMCDMultiple(listaFactores){
+    const mcdFactores = {};
+    let mcd = 1;
+    if (listaFactores.length === 0) return { mcd, mcdFactores };
+    Object.keys(listaFactores[0]).map(Number).forEach(primo => {
+        let minimo = listaFactores[0][primo];
+        for (let i = 1; i < listaFactores.length; i++) {
+            if (!listaFactores[i][primo]) { minimo = 0; break; }
+            minimo = Math.min(minimo, listaFactores[i][primo]);
+        }
+        if (minimo > 0) {
+            mcdFactores[primo] = minimo;
+            mcd *= Math.pow(primo, minimo);
+        }
+    });
+    return { mcd, mcdFactores };
+}
+
+function calcularMCMMultiple(listaFactores){
+    const mcmFactores = {};
+    let mcm = 1;
+    const todosPrimos = new Set();
+    listaFactores.forEach(f => Object.keys(f).forEach(p => todosPrimos.add(Number(p))));
+    [...todosPrimos].sort((a, b) => a - b).forEach(primo => {
+        let maximo = 0;
+        listaFactores.forEach(f => { if (f[primo]) maximo = Math.max(maximo, f[primo]); });
+        mcmFactores[primo] = maximo;
+        mcm *= Math.pow(primo, maximo);
+    });
+    return { mcm, mcmFactores };
+}
+
+/* ============================================================
+   PRESENTACIÓN DE RESULTADOS
+   ============================================================ */
+function generarTablaFactorizacion(pasos){
+    let html = '<div class="division-table math">';
+    pasos.forEach((paso, i) => {
+        const primoHtml = paso.primo === "" ? "&nbsp;" : chipPrimo(paso.primo);
+        html += `
+            <div class="division-row" style="--i:${i}">
+                <div class="numero">${fmt(paso.numero)}</div>
+                <div class="primo">${primoHtml}</div>
+            </div>`;
+    });
+    return html + "</div>";
+}
+
+function tablaExponentes(numeros, listaFactores, mcdFactores, mcmFactores){
+    const primos = Object.keys(mcmFactores).map(Number).sort((a, b) => a - b);
+    if (primos.length === 0) return "";
+
+    let html = `
+    <div class="tabla-exponentes-wrap">
+    <table class="tabla-exponentes math">
+        <caption>Comparación de exponentes</caption>
+        <thead><tr>
+            <th scope="col">Primo</th>
+            ${numeros.map(n => `<th scope="col">${fmt(n)}</th>`).join("")}
+            <th scope="col" class="col-mcd">M.C.D.<br><small>menor exponente común</small></th>
+            <th scope="col" class="col-mcm">m.c.m.<br><small>mayor exponente</small></th>
+        </tr></thead><tbody>`;
+
+    primos.forEach(p => {
+        html += `<tr><th scope="row">${chipPrimo(p)}</th>`;
+        listaFactores.forEach(f => {
+            const e = f[p] || 0;
+            html += e === 0
+                ? `<td class="cero">—</td>`
+                : `<td>${chipPrimo(p)}${e > 1 ? `<sup>${e}</sup>` : ""}</td>`;
+        });
+        const eMcd = mcdFactores[p];
+        html += eMcd
+            ? `<td class="col-mcd">${chipPrimo(p)}${eMcd > 1 ? `<sup>${eMcd}</sup>` : ""}</td>`
+            : `<td class="col-mcd cero">—</td>`;
+        const eMcm = mcmFactores[p];
+        html += `<td class="col-mcm">${chipPrimo(p)}${eMcm > 1 ? `<sup>${eMcm}</sup>` : ""}</td></tr>`;
+    });
+
+    html += `</tbody>
+        <tfoot><tr><td colspan="${numeros.length + 3}">
+            Para el M.C.D. se toman solo los primos que aparecen en <strong>todos</strong> los números, con el menor exponente.
+            Para el m.c.m. se toman <strong>todos</strong> los primos, con el mayor exponente.
+        </td></tr></tfoot>
+    </table></div>`;
+    return html;
+}
+
+function calcular(){
+    const cantidad = document.querySelectorAll("#numbersContainer input").length;
+    const resultsDiv = document.getElementById("results");
+    if (cantidad === 0) {
+        resultsDiv.innerHTML = '<div class="error">Primero genera los campos de entrada.</div>';
+        return;
+    }
+
+    const numeros = [];
+    const factorizaciones = [];
+
+    for (let i = 1; i <= cantidad; i++) {
+        const el = document.getElementById(`num${i}`);
+        const texto = el.value.trim();
+        if (!esEnteroValido(texto)) {
+            resultsDiv.innerHTML = `<div class="error">El Número ${i} debe ser un número natural, sin comas ni puntos.</div>`;
+            el.focus();
+            return;
+        }
+        const valor = parseInt(texto, 10);
+        if (valor < 2) {
+            resultsDiv.innerHTML = `<div class="error">El Número ${i} debe ser mayor o igual que 2.</div>`;
+            el.focus();
+            return;
+        }
+        if (valor > MAX_VALOR) {
+            resultsDiv.innerHTML = `<div class="error">El Número ${i} es demasiado grande: usa como máximo 7 cifras (${fmt(MAX_VALOR)}).</div>`;
+            el.focus();
+            return;
+        }
+        numeros.push(valor);
+        factorizaciones.push(factorizar(valor));
+    }
+
+    let html = '<div class="factorization-container">';
+    numeros.forEach((num, index) => {
+        const factores = factorizaciones[index].factores;
+        const primoUnico = esPrimo(num);
+        html += `
+            <div class="factorization">
+                <h3>Factorización de ${fmt(num)}</h3>
+                ${generarTablaFactorizacion(factorizaciones[index].pasos)}
+                <div class="formula math">${fmt(num)} = ${factoresAFormula(factores)}</div>
+                ${primoUnico ? `<span class="aviso-primo">¡${fmt(num)} es un número primo!</span>` : ""}
+            </div>`;
+    });
+    html += "</div>";
+
+    if (numeros.length > 1) {
+        const listaFactores = factorizaciones.map(f => f.factores);
+        const { mcd, mcdFactores } = calcularMCDMultiple(listaFactores);
+        const { mcm, mcmFactores } = calcularMCMMultiple(listaFactores);
+
+        html += tablaExponentes(numeros, listaFactores, mcdFactores, mcmFactores);
+
+        html += `
+        <div class="result-box">
+            <div class="result-item math">
+                <h4>M.C.D. de ${numeros.map(fmt).join(", ")}</h4>
+                ${Object.keys(mcdFactores).length > 0
+                    ? `<div class="formula math">M.C.D. = ${formulaConValor(mcdFactores, mcd)}</div>`
+                    : `<div class="formula math">No hay factores comunes &rarr; M.C.D. = <span class="valor">1</span></div>`}
+                <p class="regla">Regla: factores <strong>comunes</strong> elevados al <strong>menor</strong> exponente.</p>
+            </div>
+            <div class="result-item mcm math">
+                <h4>m.c.m. de ${numeros.map(fmt).join(", ")}</h4>
+                <div class="formula math">m.c.m. = ${formulaConValor(mcmFactores, mcm)}</div>
+                <p class="regla">Regla: factores <strong>comunes y no comunes</strong> elevados al <strong>mayor</strong> exponente.</p>
+            </div>`;
+
+        if (numeros.length === 2) {
+            const producto = numeros[0] * numeros[1];
+            html += `
+            <div class="comprobacion math">
+                <strong>Comprobación:</strong>
+                ${fmt(numeros[0])} · ${fmt(numeros[1])} = ${fmt(producto)}
+                &nbsp;y&nbsp;
+                M.C.D. · m.c.m. = ${fmt(mcd)} · ${fmt(mcm)} = ${fmt(mcd * mcm)} ✓
+            </div>`;
+        }
+        html += "</div>";
+    }
+
+    resultsDiv.innerHTML = html;
+    activarResaltado(resultsDiv);
+}
+
+/* Resaltar el mismo primo en todas las tablas y fórmulas al pasar el ratón */
+function activarResaltado(ambito){
+    ambito.querySelectorAll("[data-primo]").forEach(el => {
+        const p = el.getAttribute("data-primo");
+        el.addEventListener("mouseenter", () => marcarPrimo(p, true));
+        el.addEventListener("mouseleave", () => marcarPrimo(p, false));
+    });
+}
+function marcarPrimo(p, activo){
+    document.querySelectorAll(`[data-primo="${p}"]`).forEach(el =>
+        el.classList.toggle("hl", activo));
+}
+
+/* ============================================================
+   MODO PRÁCTICA
+   ============================================================ */
+let retoActual = null;
+
+function togglePractica(){
+    const sec = document.getElementById("practica");
+    const visible = sec.classList.toggle("visible");
+    document.getElementById("btnPractica").textContent =
+        visible ? "Ocultar práctica" : "Modo práctica";
+    if (visible && retoActual === null) nuevoReto();
+    if (visible) sec.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function nuevoReto(){
+    // Número compuesto entre 12 y 600 con al menos dos factores primos contados con repetición
+    let n;
+    do {
+        n = 12 + Math.floor(Math.random() * 589);
+    } while (esPrimo(n));
+    retoActual = n;
+    document.getElementById("numReto").textContent = fmt(n);
+    document.getElementById("respuestaPractica").value = "";
+    const fb = document.getElementById("feedbackPractica");
+    fb.className = "feedback";
+    fb.innerHTML = "";
+    document.getElementById("respuestaPractica").focus();
+}
+
+function analizarRespuesta(texto){
+    // Normalizar separadores de producto
+    const limpio = texto.replace(/\s+/g, "")
+                        .replace(/[·×xX*]/g, "*");
+    if (limpio === "") return { error: "Escribe tu respuesta antes de comprobar." };
+    const tokens = limpio.split("*");
+    const factores = {};
+    for (const t of tokens) {
+        const m = t.match(/^(\d+)(?:\^(\d+))?$/);
+        if (!m) return { error: `No entiendo la parte «${t}». Usa el formato 2^2·3·5.` };
+        const base = parseInt(m[1], 10);
+        const exp = m[2] ? parseInt(m[2], 10) : 1;
+        if (exp < 1) return { error: "Los exponentes deben ser 1 o mayores." };
+        if (!esPrimo(base)) return { error: `${fmt(base)} no es un número primo: sigue descomponiéndolo.` };
+        factores[base] = (factores[base] || 0) + exp;
+    }
+    return { factores };
+}
+
+function comprobarPractica(){
+    if (retoActual === null) { nuevoReto(); return; }
+    const fb = document.getElementById("feedbackPractica");
+    const res = analizarRespuesta(document.getElementById("respuestaPractica").value);
+
+    if (res.error) {
+        fb.className = "feedback mal";
+        fb.innerHTML = res.error;
+        return;
+    }
+
+    const producto = Object.keys(res.factores).reduce(
+        (acc, p) => acc * Math.pow(Number(p), res.factores[p]), 1);
+    const correcto = factorizar(retoActual).factores;
+    const esIgual = producto === retoActual;
+
+    if (esIgual) {
+        fb.className = "feedback ok";
+        fb.innerHTML = `¡Correcto! ${fmt(retoActual)} = ${factoresAFormula(correcto)}
+            <div class="detalle">Pulsa «Otro número» para seguir practicando.</div>`;
+        activarResaltado(fb);
+    } else {
+        fb.className = "feedback mal";
+        fb.innerHTML = `Todavía no: tu producto vale ${fmt(producto)}, pero el número es ${fmt(retoActual)}.
+            <div class="detalle">Repasa la división empezando por el primo más pequeño posible.</div>`;
+    }
+}
+
+function verSolucion(){
+    if (retoActual === null) { nuevoReto(); return; }
+    const fb = document.getElementById("feedbackPractica");
+    const { factores } = factorizar(retoActual);
+    fb.className = "feedback ok";
+    fb.innerHTML = `${fmt(retoActual)} = ${factoresAFormula(factores)}
+        <div class="detalle">Intenta el siguiente sin mirar la solución.</div>`;
+    activarResaltado(fb);
+}
+
+/* ============================================================
+   TABLA DE LOS 1000 PRIMEROS PRIMOS
+   ============================================================ */
+let _primosGenerados = false;
+
+function generarPrimos(n){
+    const primos = [2];
+    let num = 3;
+    while (primos.length < n) {
+        let es = true;
+        const raiz = Math.sqrt(num);
+        for (const p of primos) {
+            if (p > raiz) break;
+            if (num % p === 0) { es = false; break; }
+        }
+        if (es) primos.push(num);
+        num += 2;
+    }
+    return primos;
+}
+
+function renderizarTablaPrimos(){
+    if (_primosGenerados) return;
+    const TOTAL = 1000, BLOQUES = 4, COLUMNAS = BLOQUES * 2;
+    const FILAS = Math.ceil(TOTAL / BLOQUES);
+    const primos = generarPrimos(TOTAL);
+    const thead = document.querySelector("#tablaPrimos thead");
+    const tbody = document.querySelector("#tablaPrimos tbody");
+
+    let cab = "<tr>";
+    for (let i = 0; i < BLOQUES; i++) cab += "<th scope='col'>Posición</th><th scope='col'>Primo</th>";
+    thead.innerHTML = cab + "</tr>";
+
+    const celdas = Array.from({ length: FILAS }, () => Array(COLUMNAS).fill(""));
+    let idx = 0;
+    for (let b = 0; b < BLOQUES; b++) {
+        for (let f = 0; f < FILAS && idx < TOTAL; f++) {
+            celdas[f][b * 2] = idx + 1;
+            celdas[f][b * 2 + 1] = fmt(primos[idx]);
+            idx++;
+        }
+    }
+    tbody.innerHTML = celdas
+        .map(fila => `<tr>${fila.map(v => `<td>${v}</td>`).join("")}</tr>`)
+        .join("");
+
+    _primosGenerados = true;
+}
+
+function toggleTablaPrimos(){
+    const cont = document.getElementById("tablaPrimosContainer");
+    const visible = cont.classList.toggle("visible");
+    document.getElementById("btnTablaPrimos").textContent =
+        visible ? "Ocultar tabla de primos" : "Ver tabla de primos";
+    if (visible) {
+        renderizarTablaPrimos();
+        cont.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+}
+
+/* ============================================================
+   INICIALIZACIÓN
+   ============================================================ */
+window.addEventListener("load", () => {
+    generarCampos();
+    document.getElementById("cantidad").addEventListener("keydown", ev => {
+        if (ev.key === "Enter") generarCampos();
+    });
+    document.getElementById("respuestaPractica").addEventListener("keydown", ev => {
+        if (ev.key === "Enter") comprobarPractica();
+    });
+});
+</script>
+</body>
+</html>

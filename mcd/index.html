@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Máximo común divisor · explicación visual</title>
+<style>
+  :root{
+    --ink:#1F2A3D;
+    --paper:#EEF2F6;
+    --card:#FFFFFF;
+    --main:#1F4E79;
+    --a:#2E75B6;       --a-soft:#E1ECF7;   /* número A */
+    --b:#2F8F5B;       --b-soft:#E0F0E7;   /* número B */
+    --c:#7A4FB0;       --c-soft:#ECE3F6;   /* número C */
+    --max:#E08A1E;     --max-soft:#FBEBD2; --max-deep:#B36408;  /* lo común / el máximo */
+    --line:#D8E0E8;
+    --muted:#5C6B7F;
+    --shadow:0 1px 2px rgba(31,42,61,.06), 0 8px 24px rgba(31,42,61,.07);
+    --r:16px;
+    --num:'Palatino Linotype','URW Palladio L',Palatino,'Book Antiqua',Georgia,serif;
+    --body:'Helvetica Neue',Helvetica,Arial,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html,body{margin:0}
+  body{
+    font-family:var(--body); color:var(--ink);
+    background:radial-gradient(1200px 500px at 50% -200px, #F7FAFD 0%, var(--paper) 60%) fixed;
+    line-height:1.55; -webkit-text-size-adjust:100%; padding:0 16px 64px;
+  }
+  .wrap{max-width:880px;margin:0 auto}
+
+  header{padding:28px 0 8px;text-align:center}
+  .eyebrow{font-family:var(--body);font-size:13px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--main);opacity:.85;margin:0 0 6px}
+  h1{font-family:var(--num);font-weight:700;font-size:clamp(26px,6vw,40px);line-height:1.1;
+    margin:0;color:var(--ink);letter-spacing:-.01em}
+  .lede{color:var(--muted);font-size:15.5px;margin:10px auto 0;max-width:560px}
+
+  .result{
+    margin:22px auto 4px;max-width:560px;
+    background:linear-gradient(180deg,#fff,#FAFCFE);border:1px solid var(--line);
+    border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;
+    display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;
+    font-family:var(--num);font-weight:600;font-size:clamp(20px,5vw,28px);
+  }
+  .result .lab{color:var(--main)} .result .eq{color:var(--muted);font-weight:500}
+  .result .pa{color:var(--a)} .result .pb{color:var(--b)} .result .pc{color:var(--c)}
+  .result .val{color:#fff;background:var(--max);min-width:1.7em;padding:.06em .42em;
+    border-radius:12px;box-shadow:0 4px 12px rgba(224,138,30,.35);display:inline-block;
+    text-align:center;transition:transform .25s ease}
+  .result .val.bump{transform:scale(1.16)}
+  .coprime-note{text-align:center;font-size:13.5px;color:var(--max-deep);margin:8px 0 0}
+
+  .pair{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center;margin:18px 0 6px}
+  .stepper{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:10px 12px;display:flex;align-items:center;gap:8px;position:relative}
+  .stepper .tag{font-family:var(--body);font-weight:700;font-size:13px;letter-spacing:.04em;width:74px}
+  .stepper.A .tag{color:var(--a)} .stepper.B .tag{color:var(--b)} .stepper.C .tag{color:var(--c)}
+  .stepper button.pm{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);
+    background:#fff;font-size:20px;line-height:1;cursor:pointer;color:var(--ink);font-family:var(--num);
+    transition:background .15s,transform .05s}
+  .stepper button.pm:hover{background:var(--paper)} .stepper button.pm:active{transform:scale(.92)}
+  .stepper input{width:54px;text-align:center;border:none;background:transparent;font-family:var(--num);
+    font-weight:700;font-size:22px;color:var(--ink);-moz-appearance:textfield}
+  .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .stepper.A input{color:var(--a)} .stepper.B input{color:var(--b)} .stepper.C input{color:var(--c)}
+  .stepper .rm{position:absolute;top:-9px;right:-9px;width:24px;height:24px;border-radius:50%;
+    border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;font-size:14px;
+    line-height:1;box-shadow:var(--shadow)}
+  .stepper .rm:hover{color:var(--c);border-color:var(--c)}
+  .addc{border:1px solid var(--line);background:#fff;color:var(--muted);font-family:var(--body);
+    font-weight:600;font-size:13px;border-radius:12px;padding:11px 13px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;transition:border-color .15s,color .15s}
+  .addc .plus{font-family:var(--num);font-size:17px;line-height:1;color:var(--c)}
+  .addc:hover{border-color:var(--c);color:var(--c)}
+
+  .tabs{display:flex;gap:6px;margin:22px 0 0;background:#fff;border:1px solid var(--line);
+    border-radius:14px;padding:6px;box-shadow:var(--shadow);overflow-x:auto}
+  .tab{flex:1 1 auto;white-space:nowrap;border:none;background:transparent;cursor:pointer;padding:11px 12px;
+    border-radius:10px;font-family:var(--body);font-weight:600;font-size:14px;color:var(--muted);transition:background .15s,color .15s}
+  .tab .n{font-family:var(--num);opacity:.6;margin-right:7px}
+  .tab[aria-selected="true"]{background:var(--main);color:#fff}
+  .tab[aria-selected="true"] .n{opacity:.85}
+  .tab:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow);padding:22px 20px;margin-top:14px}
+  .panel[hidden]{display:none}
+  .panel h2{font-family:var(--num);font-weight:600;font-size:19px;margin:0 0 4px;color:var(--main)}
+  .panel .intro{color:var(--muted);font-size:14.5px;margin:0 0 16px}
+
+  .divrow{margin:0 0 14px}
+  .divrow .who{font-family:var(--body);font-weight:700;font-size:14px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+  .swatch{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-family:var(--num);font-weight:600;font-size:16px;min-width:38px;padding:7px 10px;border-radius:10px;
+    text-align:center;border:1.5px solid transparent;background:var(--paper);color:var(--muted);cursor:default;transition:transform .12s}
+  .chip.own-a{background:var(--a-soft);color:var(--a)} .chip.own-b{background:var(--b-soft);color:var(--b)} .chip.own-c{background:var(--c-soft);color:var(--c)}
+  .chip.common{border-color:var(--max);color:var(--max-deep);position:relative;cursor:pointer}
+  .chip.common:hover{transform:translateY(-2px)}
+  .chip.max{background:var(--max);color:#fff;border-color:var(--max)}
+  .chip.max::after{content:"máx";position:absolute;top:-9px;right:-6px;font-size:9px;font-weight:700;
+    background:var(--max-deep);color:#fff;padding:1px 5px;border-radius:6px;letter-spacing:.05em;font-family:var(--body)}
+  .legend{font-size:13px;color:var(--muted);margin-top:6px;display:flex;gap:16px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .ring{width:14px;height:14px;border-radius:5px;border:1.5px solid var(--max);display:inline-block}
+  .explain{margin-top:14px;padding:13px 15px;border-radius:12px;background:var(--max-soft);
+    border:1px solid #F0D6A8;font-size:15px;min-height:1px}
+  .explain b{font-family:var(--num)}
+  .explain.empty{background:var(--paper);border-color:var(--line);color:var(--muted)}
+
+  /* saco */
+  .saco{border:2px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#FBFDFF,#F3F7FB);
+    padding:14px 16px;margin:0 0 18px}
+  .saco .title{font-family:var(--body);font-weight:700;font-size:14px;display:flex;justify-content:space-between;
+    align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .saco .counts{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+  .saco .counts b{font-family:var(--num)}
+  .saco .pool{display:flex;flex-wrap:wrap;gap:5px}
+  .saco .pool .pellet{width:14px;height:14px}
+
+  .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .controls .lbl{font-weight:600;font-size:14px}
+  .pick{display:flex;gap:6px;flex-wrap:wrap}
+  .pick button{font-family:var(--num);font-weight:600;font-size:15px;border:1.5px solid var(--line);background:#fff;
+    border-radius:9px;min-width:36px;padding:6px 9px;cursor:pointer;color:var(--ink);transition:all .12s}
+  .pick button:hover{border-color:var(--main)}
+  .pick button.on{background:var(--main);color:#fff;border-color:var(--main)}
+  .pick button.okmax{border-color:var(--max);color:var(--max-deep)}
+  .pick button.on.okmax{background:var(--max);color:#fff;border-color:var(--max)}
+  .verdict{font-size:15px;margin:14px 0;font-weight:500}
+  .verdict.ok{color:var(--b)} .verdict.no{color:var(--max-deep)}
+  .bags{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px}
+  .bag{border:2px dashed var(--line);border-radius:14px;padding:12px;min-width:64px;background:#FBFDFF}
+  .bag.exact{border-color:var(--b);border-style:solid;background:var(--b-soft)}
+  .bag .grid{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:120px}
+  .pellet{width:13px;height:13px;border-radius:50%;flex:0 0 auto}
+  .pellet.a{background:var(--a)} .pellet.b{background:var(--b)} .pellet.c{background:var(--c)}
+  @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+  .bag .pellet,.leftover .pellet{animation:pop .25s both}
+  .leftover{margin-top:12px;padding:11px 14px;border-radius:12px;background:var(--max-soft);border:1px solid #F0D6A8;font-size:14.5px}
+  .leftover .grid{display:inline-flex;gap:5px;margin-left:6px;vertical-align:middle}
+
+  .tilewrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+  svg{max-width:100%;height:auto;display:block}
+  #tileSvg text{font-family:var(--num)}
+  .slider-row{display:flex;align-items:center;gap:12px;width:100%;max-width:420px;margin-top:6px}
+  .slider-row input[type=range]{flex:1;accent-color:var(--main)}
+  .slider-row .sval{font-family:var(--num);font-weight:700;font-size:20px;min-width:30px;text-align:center}
+  .tileverdict{font-size:15px;font-weight:500;text-align:center;min-height:1.5em}
+  .tileverdict.ok{color:var(--b)} .tileverdict.best{color:var(--max-deep)} .tileverdict.no{color:var(--muted)}
+  .tilecount{font-size:13.5px;color:var(--muted);text-align:center;margin:2px 0 0;font-weight:400}
+  .tilecount b{font-family:var(--num)}
+
+  /* método: tabla vertical española + forma exponencial */
+  .factabs{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px}
+  .ftab .who{font-family:var(--body);font-weight:700;font-size:14px;margin:0 0 6px}
+  .ftab.A .who{color:var(--a)} .ftab.B .who{color:var(--b)} .ftab.C .who{color:var(--c)}
+  .frow{display:flex;font-family:var(--num);font-size:17px;line-height:1.55}
+  .frow .fn{min-width:46px;text-align:right;padding-right:9px}
+  .frow .fp{border-left:2px solid var(--ink);padding-left:9px;min-width:34px;font-weight:700}
+  .frow .fp.hit{color:var(--max-deep);background:var(--max-soft);border-radius:0 7px 7px 0}
+  .fexp{margin-top:8px;font-family:var(--num);font-size:16px}
+  .method{display:flex;flex-direction:column;gap:14px}
+  .facline{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;font-family:var(--num);font-size:18px}
+  .facline .who{font-weight:700;font-size:14px;min-width:86px;font-family:var(--body)}
+  .facline.A .who{color:var(--a)} .facline.B .who{color:var(--b)} .facline.C .who{color:var(--c)}
+  .fac{padding:4px 9px;border-radius:9px;background:var(--paper);font-weight:600}
+  .fac.hit{background:var(--max-soft);color:var(--max-deep);outline:1.5px solid var(--max)}
+  .fac sup{font-size:.7em} .times{color:var(--muted)}
+  .build{margin-top:4px;padding:14px 16px;border-radius:12px;background:#fff;border:1px solid var(--line);
+    font-family:var(--num);font-size:19px;font-weight:600}
+  .build .res{color:#fff;background:var(--max);padding:.05em .4em;border-radius:9px;margin-left:4px}
+  .note{font-size:13.5px;color:var(--muted);font-family:var(--body)}
+
+  /* fracciones */
+  .fracflow{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-family:var(--num);font-size:24px;margin:12px 0 6px}
+  .frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1.2}
+  .frac .fnum{padding:0 9px;border-bottom:2.5px solid var(--ink);color:var(--a)}
+  .frac .fden{padding:0 9px;color:var(--b)}
+  .step{display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+  .divlab{font-family:var(--body);font-size:13px;color:var(--max-deep);font-weight:700;background:var(--max-soft);
+    border:1px solid #F0D6A8;border-radius:9px;padding:2px 8px}
+  .farrow{color:var(--muted);font-size:20px}
+  .irred{background:var(--b-soft);color:var(--b);font-weight:700;border-radius:10px;padding:5px 11px;
+    font-size:14px;font-family:var(--body);align-self:center}
+  .fbtns{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .fbtns .lbl{font-weight:600;font-size:14px}
+  .btn{font-family:var(--body);font-weight:600;font-size:14px;border:1.5px solid var(--line);background:#fff;
+    border-radius:10px;padding:8px 14px;cursor:pointer;color:var(--ink);transition:all .12s}
+  .btn:hover{border-color:var(--main)}
+  .btn.primary{background:var(--main);border-color:var(--main);color:#fff}
+  .btn.primary:hover{background:#173D5F}
+  .fnote{margin-top:12px}
+
+  /* ponte a prueba */
+  .pr-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0 4px}
+  .pr-q{font-family:var(--num);font-size:26px;font-weight:700}
+  .pr-q .pa{color:var(--a)} .pr-q .pb{color:var(--b)}
+  .pr-in{width:92px;font-family:var(--num);font-size:22px;font-weight:700;text-align:center;padding:8px;
+    border:1.5px solid var(--line);border-radius:10px;color:var(--ink)}
+  .pr-in:focus-visible{outline:3px solid var(--a);outline-offset:1px}
+  .pr-feed{font-size:15px;font-weight:500;margin:10px 0;min-height:1.5em}
+  .pr-feed.ok{color:var(--b)} .pr-feed.no{color:var(--max-deep)}
+  .pr-hint{margin-top:8px;padding:12px 14px;border-radius:12px;background:var(--paper);
+    border:1px solid var(--line);font-size:15px}
+  .pr-hint .fac{font-size:16px}
+  .pr-score{font-size:13.5px;color:var(--muted);margin-top:14px}
+  .pr-score b{font-family:var(--num);color:var(--b)}
+
+  .foot{text-align:center;color:var(--muted);font-size:12.5px;margin-top:26px}
+  @media (max-width:520px){.panel{padding:18px 14px}.tab{font-size:13px;padding:10px 8px}.tab .n{margin-right:4px}}
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Matemáticas · divisibilidad</p>
+    <h1>Máximo común divisor</h1>
+    <p class="lede">El número más grande por el que se pueden dividir <b>todos a la vez</b>, sin que sobre nada. Cambia los números y míralo de varias formas distintas.</p>
+
+    <div class="result" id="banner" aria-live="polite"></div>
+    <p class="coprime-note" id="coprimeNote" hidden>M.C.D. = 1: los números son <b>primos entre sí</b> (no comparten ningún factor).</p>
+
+    <div class="pair" id="pair">
+      <div class="stepper A">
+        <span class="tag">Número A</span>
+        <button class="pm" data-d="-1" data-i="0" aria-label="Bajar A">−</button>
+        <input id="in0" type="number" inputmode="numeric" value="12" min="2" max="60" aria-label="Número A">
+        <button class="pm" data-d="1" data-i="0" aria-label="Subir A">+</button>
+      </div>
+      <div class="stepper B">
+        <span class="tag">Número B</span>
+        <button class="pm" data-d="-1" data-i="1" aria-label="Bajar B">−</button>
+        <input id="in1" type="number" inputmode="numeric" value="18" min="2" max="60" aria-label="Número B">
+        <button class="pm" data-d="1" data-i="1" aria-label="Subir B">+</button>
+      </div>
+      <div class="stepper C" id="stepperC" hidden>
+        <span class="tag">Número C</span>
+        <button class="pm" data-d="-1" data-i="2" aria-label="Bajar C">−</button>
+        <input id="in2" type="number" inputmode="numeric" value="30" min="2" max="60" aria-label="Número C">
+        <button class="pm" data-d="1" data-i="2" aria-label="Subir C">+</button>
+        <button class="rm" id="rmC" aria-label="Quitar el tercer número">×</button>
+      </div>
+      <button class="addc" id="addC"><span class="plus">+</span> tercer número</button>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Formas de verlo">
+    <button class="tab" role="tab" aria-selected="true"  id="tab0" aria-controls="p0"><span class="n">1</span>Divisores comunes</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab1" aria-controls="p1" tabindex="-1"><span class="n">2</span>El reparto</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab2" aria-controls="p2" tabindex="-1"><span class="n">3</span><span id="tab2lab">El cuadrado</span></button>
+    <button class="tab" role="tab" aria-selected="false" id="tab3" aria-controls="p3" tabindex="-1"><span class="n">4</span>El método</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab4" aria-controls="p4" tabindex="-1"><span class="n">5</span>Fracciones</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab5" aria-controls="p5" tabindex="-1"><span class="n">6</span>Ponte a prueba</button>
+  </div>
+
+  <section class="panel" id="p0" role="tabpanel" aria-labelledby="tab0">
+    <h2>Los divisores que comparten</h2>
+    <p class="intro">Un <b>divisor</b> reparte un número en grupos iguales sin que sobre nada. Buscamos los divisores que <b>tienen todos</b>; el mayor de ellos es el M.C.D. Pulsa un divisor común para verlo.</p>
+    <div id="divHost"></div>
+    <div class="legend">
+      <span><span class="ring"></span> recuadro ámbar = divisor común a todos</span>
+      <span><span class="swatch" style="background:var(--max)"></span> relleno = el máximo (M.C.D.)</span>
+    </div>
+    <div class="explain empty" id="divExplain">Pasa el ratón o pulsa un divisor común para ver cómo parte a cada número.</div>
+  </section>
+
+  <section class="panel" id="p1" role="tabpanel" aria-labelledby="tab1" hidden>
+    <h2>Repartir en bolsas iguales</h2>
+    <p class="intro" id="repIntro"></p>
+    <div class="saco" id="repSaco"></div>
+    <div class="controls">
+      <span class="lbl">Probar con</span>
+      <div class="pick" id="repPick"></div>
+      <span class="lbl" id="repPickLbl">bolsas</span>
+    </div>
+    <p class="verdict" id="repVerdict" aria-live="polite"></p>
+    <div class="bags" id="repBags"></div>
+    <div class="leftover" id="repLeft" hidden></div>
+  </section>
+
+  <section class="panel" id="p2" role="tabpanel" aria-labelledby="tab2" hidden>
+    <h2 id="sqTitle">La baldosa cuadrada más grande</h2>
+    <p class="intro" id="sqIntro"></p>
+    <div class="tilewrap">
+      <div id="tileSvg"></div>
+      <div class="slider-row">
+        <span class="lbl">Lado</span>
+        <input type="range" id="tileRange" min="1" value="6" aria-label="Lado de la pieza">
+        <span class="sval" id="tileVal">6</span>
+      </div>
+      <p class="tileverdict" id="tileVerdict" aria-live="polite"></p>
+      <p class="tilecount" id="tileCount"></p>
+    </div>
+  </section>
+
+  <section class="panel" id="p3" role="tabpanel" aria-labelledby="tab3" hidden>
+    <h2>El método: factores primos</h2>
+    <p class="intro">Para números grandes no compensa listar todos los divisores. Se descompone cada número en <b>factores primos</b> (tabla de la derecha) y se toman los <b>comunes con el menor exponente</b>.</p>
+    <div class="method">
+      <div class="factabs" id="facTabs"></div>
+      <div id="methodHost"></div>
+      <div class="build" id="mBuild"></div>
+      <p class="note">Lo resaltado en ámbar son los factores que aparecen en <b>todos</b> (tantas veces como en el que menos). Multiplicándolos sale el M.C.D.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="p4" role="tabpanel" aria-labelledby="tab4" hidden>
+    <h2>Para qué sirve: simplificar fracciones</h2>
+    <p class="intro" id="fracIntro"></p>
+    <div class="fracflow" id="fracFlow"></div>
+    <div class="fbtns" id="fracBtns"></div>
+    <div class="explain fnote" id="fracNote"></div>
+  </section>
+
+  <section class="panel" id="p5" role="tabpanel" aria-labelledby="tab5" hidden>
+    <h2>Ponte a prueba</h2>
+    <p class="intro">Calcula el M.C.D. de estos dos números. Puedes pedir una pista (la descomposición en factores primos).</p>
+    <div class="pr-row">
+      <span class="pr-q" id="prQ"></span>
+      <input class="pr-in" id="prIn" type="number" inputmode="numeric" min="1" aria-label="Tu respuesta">
+      <button class="btn primary" id="prCheck">Comprobar</button>
+      <button class="btn" id="prHintBtn">Pista</button>
+      <button class="btn" id="prNew">Nuevo reto</button>
+    </div>
+    <p class="pr-feed" id="prFeed" aria-live="polite"></p>
+    <div class="pr-hint" id="prHint" hidden></div>
+    <p class="pr-score">Aciertos a la primera: <b id="prScore">0</b></p>
+  </section>
+
+  <p class="foot">CEPA · educación de personas adultas — herramienta de aula</p>
+</div>
+
+<script>
+"use strict";
+const KEY=['a','b','c'], NAME=['A','B','C'], COLORVAR=['--a','--b','--c'];
+const state={ nums:[12,18], rep:6, tile:6 };
+
+const $=s=>document.querySelector(s);
+const el=(t,c,txt)=>{const e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e;};
+
+function divisores(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
+function mcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a;}
+function gcdAll(ns){return ns.reduce((g,n)=>mcd(g,n));}
+function factorizar(n){const f=[];let d=2;while(d*d<=n){let e=0;while(n%d===0){e++;n/=d;}if(e)f.push([d,e]);d++;}if(n>1)f.push([n,1]);return f;}
+function primosOrden(n){const out=[];let d=2;while(d*d<=n){while(n%d===0){out.push(d);n/=d;}d++;}if(n>1)out.push(n);return out;}
+function clamp(v){v=parseInt(v,10);if(isNaN(v))v=2;return Math.max(2,Math.min(60,v));}
+
+/* ---------- master ---------- */
+function setNum(i,val){ state.nums[i]=clamp(val); afterChange(); }
+function afterChange(){
+  state.nums.forEach((n,i)=>{const inp=$('#in'+i); if(inp) inp.value=n;});
+  const g=gcdAll(state.nums);
+  state.rep=g; state.tile=g;
+  updateBanner(g);
+  renderAll();
+}
+function updateBanner(g){
+  const parts=state.nums.map((n,i)=>`<span class="p${KEY[i]}">${n}</span>`).join('<span class="eq">,</span>');
+  $('#banner').innerHTML=`<span class="lab">M.C.D.</span><span class="eq">(</span>${parts}<span class="eq">) =</span><span class="val" id="rVal">${g}</span>`;
+  const val=$('#rVal'); val.classList.remove('bump'); void val.offsetWidth; val.classList.add('bump');
+  $('#coprimeNote').hidden=(g!==1);
+}
+function addThird(){ if(state.nums.length===3)return; state.nums.push(clamp($('#in2').value||30));
+  $('#stepperC').hidden=false; $('#addC').hidden=true; afterChange(); }
+function removeThird(){ if(state.nums.length!==3)return; state.nums.pop();
+  $('#stepperC').hidden=true; $('#addC').hidden=false; afterChange(); }
+
+function renderAll(){ renderDivisores(); renderReparto(); renderTile(); renderMetodo(); resetFrac(); }
+
+/* ---------- 1 · divisores ---------- */
+function renderDivisores(){
+  const ns=state.nums, g=gcdAll(ns);
+  const allSets=ns.map(n=>new Set(divisores(n)));
+  const host=$('#divHost'); host.innerHTML='';
+  ns.forEach((n,idx)=>{
+    const row=el('div','divrow');
+    const who=el('p','who');
+    who.innerHTML=`<span class="swatch" style="background:var(${COLORVAR[idx]})"></span> Divisores de ${n}`;
+    const chips=el('div','chips');
+    divisores(n).forEach(d=>{
+      const common=allSets.every(s=>s.has(d));
+      const ch=el('div','chip '+(common?'common':'own-'+KEY[idx]), d);
+      if(common && d===g) ch.classList.add('max');
+      if(common){const show=()=>showDivExplain(d,g); ch.addEventListener('mouseenter',show); ch.addEventListener('click',show);}
+      chips.appendChild(ch);
+    });
+    row.appendChild(who); row.appendChild(chips); host.appendChild(row);
+  });
+  const ex=$('#divExplain'); ex.className='explain empty';
+  ex.textContent='Pasa el ratón o pulsa un divisor común para ver cómo parte a cada número.';
+}
+function showDivExplain(n,g){
+  const ns=state.nums;
+  const ex=$('#divExplain'); ex.className='explain';
+  const pieces=ns.map(x=>`${x} = <b>${n}</b> × ${x/n}`).join(' &nbsp;·&nbsp; ');
+  let tail;
+  if(n===g) tail=' Es el <b>mayor</b> divisor común: el M.C.D.';
+  else tail=' Pero hay otro mayor que también vale.';
+  ex.innerHTML=`<b>${n}</b> divide a ${ns.length===3?'los tres':'los dos'}: ${pieces}.${tail}`;
+}
+
+/* ---------- 2 · reparto ---------- */
+function renderReparto(){
+  const ns=state.nums, g=gcdAll(ns);
+  const names=ns.map((n,i)=>`<b style="color:var(${COLORVAR[i]})">${n}</b> ${['azules','verdes','morados'][i]}`);
+  $('#repIntro').innerHTML=`Tienes ${names.join(', ').replace(/, ([^,]*)$/,' y $1')}. Quieres bolsas <b>idénticas</b> usándolo <b>todo</b>, sin que sobre nada. ¿Cuántas bolsas, como máximo?`;
+  // saco
+  const saco=$('#repSaco'); saco.innerHTML='';
+  const title=el('div','title');
+  title.innerHTML=`<span>El saco — todo lo que hay que repartir</span>`;
+  const counts=el('div','counts');
+  counts.innerHTML=ns.map((n,i)=>`<span><span class="pellet ${KEY[i]}" style="display:inline-block;vertical-align:middle"></span> <b>${n}</b> ${['azules','verdes','morados'][i]}</span>`).join('');
+  title.appendChild(counts);
+  const pool=el('div','pool');
+  ns.forEach((n,i)=>{ for(let j=0;j<n;j++) pool.appendChild(el('div','pellet '+KEY[i])); });
+  saco.appendChild(title); saco.appendChild(pool);
+  // candidate bag counts
+  const limit=Math.min(...ns);
+  const cands=new Set([2,3,4,5,6]);
+  divisores(g).forEach(d=>cands.add(d));
+  [Math.max(2,g-1),g+1].forEach(x=>{if(x>=2&&x<=limit)cands.add(x);});
+  cands.add(g);
+  const minK=(g===1)?1:2;
+  const list=[...cands].filter(x=>x>=minK&&x<=limit).sort((x,y)=>x-y);
+  const pick=$('#repPick'); pick.innerHTML='';
+  list.forEach(k=>{
+    const exact=ns.every(n=>n%k===0);
+    const btn=el('button',null,k);
+    if(exact && k===g) btn.classList.add('okmax');
+    if(k===state.rep) btn.classList.add('on');
+    btn.addEventListener('click',()=>{state.rep=k;renderReparto();});
+    pick.appendChild(btn);
+  });
+  $('#repPickLbl').textContent=(state.rep===1)?'bolsa':'bolsas';
+  drawBags();
+}
+function drawBags(){
+  const ns=state.nums, k=state.rep, g=gcdAll(ns);
+  const exact=ns.every(n=>n%k===0);
+  const v=$('#repVerdict'), bags=$('#repBags'), left=$('#repLeft');
+  bags.innerHTML='';
+  const bolsa=k===1?'bolsa':'bolsas';
+  if(exact){
+    v.className='verdict ok';
+    let tail;
+    if(k===g && g===1) tail=`Y no hay forma de hacer más: al ser primos entre sí, la única bolsa posible es <b>1</b>. M.C.D. = 1.`;
+    else if(k===g) tail=`Y es el <b>máximo</b> posible: M.C.D. = ${g}.`;
+    else tail=`Funciona, pero aún caben más bolsas iguales.`;
+    v.innerHTML=`✓ Reparto exacto en <b>${k}</b> ${bolsa}. `+tail;
+    left.hidden=true;
+    for(let i=0;i<k;i++){
+      const bag=el('div','bag exact'), grid=el('div','grid');
+      let idx=0;
+      ns.forEach((n,c)=>{ for(let j=0;j<n/k;j++){const p=el('div','pellet '+KEY[c]);p.style.animationDelay=Math.min(idx*14,560)+'ms';grid.appendChild(p);idx++;} });
+      bag.appendChild(grid); bags.appendChild(bag);
+    }
+  } else {
+    v.className='verdict no';
+    const rest=ns.map((n,i)=>({r:n%k,i})).filter(o=>o.r>0);
+    const txt=rest.map(o=>`${o.r} ${['azul','verde','morado'][o.i]}${o.r>1?'es':''}`).join(' y ');
+    v.innerHTML=`✗ No es exacto: con <b>${k}</b> ${bolsa} sobran ${txt}.`;
+    for(let i=0;i<k;i++){
+      const bag=el('div','bag'), grid=el('div','grid');
+      let idx=0;
+      ns.forEach((n,c)=>{ for(let j=0;j<Math.floor(n/k);j++){const p=el('div','pellet '+KEY[c]);p.style.animationDelay=Math.min(idx*14,560)+'ms';grid.appendChild(p);idx++;} });
+      bag.appendChild(grid); bags.appendChild(bag);
+    }
+    left.hidden=false;
+    const lg=el('span','grid');
+    rest.forEach(o=>{ for(let j=0;j<o.r;j++) lg.appendChild(el('div','pellet '+KEY[o.i])); });
+    left.innerHTML='Sobran sin poder repartir: '; left.appendChild(lg);
+  }
+}
+
+/* ---------- 3 · cuadrado / cubo ---------- */
+function renderTile(){
+  const ns=state.nums, g=gcdAll(ns), three=ns.length===3;
+  $('#tab2lab').textContent=three?'El cubo':'El cuadrado';
+  $('#sqTitle').textContent=three?'La pieza cúbica más grande':'La baldosa cuadrada más grande';
+  if(three){
+    $('#sqIntro').innerHTML=`Una caja de <b style="color:var(--a)">${ns[0]}</b> × <b style="color:var(--b)">${ns[1]}</b> × <b style="color:var(--c)">${ns[2]}</b>. ¿Cuál es el <b>cubo</b> más grande que la llena <b>entera</b>, sin recortar ninguno? Su arista es el M.C.D.`;
+  } else {
+    $('#sqIntro').innerHTML=`Un suelo de <b style="color:var(--a)">${ns[0]}</b> × <b style="color:var(--b)">${ns[1]}</b>. ¿Cuál es la baldosa <b>cuadrada</b> más grande que lo cubre <b>entero</b>, sin cortar ninguna? Su lado es el M.C.D.`;
+  }
+  const r=$('#tileRange'); r.max=Math.min(...ns);
+  if(state.tile>+r.max) state.tile=g;
+  r.value=state.tile; $('#tileVal').textContent=state.tile;
+  three?drawBox():drawRect();
+}
+function tileVerdictText(exact,best,s,g,three,countTxt){
+  const vd=$('#tileVerdict'); const w=three?'cubos':'cuadrados';
+  if(best){vd.className='tileverdict best';vd.innerHTML=`¡${three?'El cubo':'La baldosa'} más grande posible! De ${three?'arista':'lado'} <b>${s}</b> ${three?'llena la caja':'cubre el suelo'} entero. M.C.D. = ${g}.`;}
+  else if(exact){vd.className='tileverdict ok';vd.innerHTML=`✓ ${w.charAt(0).toUpperCase()+w.slice(1)} de ${three?'arista':'lado'} <b>${s}</b> ${three?'llenan la caja':'cubren el suelo'} sin recortes… pero aún cabe ${three?'uno':'una'} mayor.`;}
+  else {vd.className='tileverdict no';vd.innerHTML=`Con ${three?'arista':'lado'} <b>${s}</b> queda ${three?'un hueco':'una franja'} sin cubrir (lo ámbar). No encaja ${three?'un cubo entero':'una baldosa entera'}.`;}
+  $('#tileCount').innerHTML=countTxt||'';
+}
+function drawRect(){
+  const [a,b]=state.nums, g=gcdAll(state.nums), s=state.tile;
+  const W=Math.max(a,b), H=Math.min(a,b);
+  const wCol=(W===a)?'var(--a)':'var(--b)', hCol=(W===a)?'var(--b)':'var(--a)';
+  const maxW=Math.min(560,(window.innerWidth||560)-72), maxH=300;
+  const scale=Math.min(maxW/W,maxH/H), pw=W*scale, ph=H*scale, pad=22;
+  const fullX=Math.floor(W/s), fullY=Math.floor(H/s);
+  const tiledW=fullX*s*scale, tiledH=fullY*s*scale;
+  const exact=(a%s===0&&b%s===0);
+  let lines='';
+  for(let i=0;i<=fullX;i++){const x=i*s*scale;lines+=`<line x1="${x}" y1="0" x2="${x}" y2="${tiledH}" stroke="#fff" stroke-width="1.5"/>`;}
+  for(let j=0;j<=fullY;j++){const y=j*s*scale;lines+=`<line x1="0" y1="${y}" x2="${tiledW}" y2="${y}" stroke="#fff" stroke-width="1.5"/>`;}
+  const fill=exact?'var(--b-soft)':'var(--a-soft)', stroke=exact?'var(--b)':'var(--line)';
+  let lo='';
+  if(tiledW<pw-.5) lo+=`<rect x="${tiledW}" y="0" width="${pw-tiledW}" height="${ph}" fill="var(--max-soft)"/>`;
+  if(tiledH<ph-.5) lo+=`<rect x="0" y="${tiledH}" width="${tiledW}" height="${ph-tiledH}" fill="var(--max-soft)"/>`;
+  $('#tileSvg').innerHTML=`<svg viewBox="0 0 ${pw+pad*2} ${ph+pad*2+10}" width="${pw+pad*2}" role="img" aria-label="Suelo ${a} por ${b}, pieza ${s}">
+    <g transform="translate(${pad},${pad})">
+      <rect x="0" y="0" width="${pw}" height="${ph}" fill="#fff" stroke="var(--line)" stroke-width="1.5" rx="3"/>
+      <rect x="0" y="0" width="${tiledW}" height="${tiledH}" fill="${fill}"/>${lo}${lines}
+      <rect x="0" y="0" width="${pw}" height="${ph}" fill="none" stroke="${stroke}" stroke-width="${exact?2.5:1.5}" rx="3"/>
+      <text x="${pw/2}" y="${ph+18}" text-anchor="middle" font-size="13" fill="${wCol}">${W}</text>
+      <text x="-12" y="${ph/2}" text-anchor="middle" font-size="13" fill="${hCol}" transform="rotate(-90 -12 ${ph/2})">${H}</text>
+    </g></svg>`;
+  const countTxt=exact?`Caben <b>${fullX} × ${fullY} = ${fullX*fullY}</b> baldosas de lado ${s}.`:'';
+  tileVerdictText(exact,exact&&s===g,s,g,false,countTxt);
+}
+function drawBox(){
+  const [a,b,c]=state.nums, g=gcdAll(state.nums), s=state.tile;
+  const c30=Math.cos(Math.PI/6), s30=.5;
+  const maxW=Math.min(520,(window.innerWidth||520)-72), maxH=320, pad=34;
+  const u=Math.min(maxW/((a+b)*c30), maxH/((a+b)*s30+c));
+  const ox=b*c30*u+pad, oy=c*u+pad;
+  const P=(x,y,z)=>[ (x-y)*c30*u+ox, (x+y)*s30*u-z*u+oy ];
+  const exact=(a%s===0&&b%s===0&&c%s===0);
+  const tints=exact?{top:'#E6F4EC',right:'#D2EADD',left:'#BFE0CE'}:{top:'#ECF2F9',right:'#DCE8F4',left:'#CBDDEE'};
+  function face(o,U,V,lenU,lenV,fill){
+    const pt=(uu,vv)=>P(o[0]+U[0]*uu+V[0]*vv, o[1]+U[1]*uu+V[1]*vv, o[2]+U[2]*uu+V[2]*vv);
+    const poly=p=>`points="${p.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}"`;
+    const tU=Math.floor(lenU/s)*s, tV=Math.floor(lenV/s)*s;
+    let o2=`<polygon ${poly([pt(0,0),pt(lenU,0),pt(lenU,lenV),pt(0,lenV)])} fill="${fill}" stroke="var(--main)" stroke-width="1.5" stroke-linejoin="round"/>`;
+    if(tU<lenU) o2+=`<polygon ${poly([pt(tU,0),pt(lenU,0),pt(lenU,lenV),pt(tU,lenV)])} fill="var(--max-soft)"/>`;
+    if(tV<lenV) o2+=`<polygon ${poly([pt(0,tV),pt(tU,tV),pt(tU,lenV),pt(0,lenV)])} fill="var(--max-soft)"/>`;
+    for(let i=0;i*s<=tU+1e-9;i++){const A=pt(i*s,0),B=pt(i*s,tV);o2+=`<line x1="${A[0].toFixed(1)}" y1="${A[1].toFixed(1)}" x2="${B[0].toFixed(1)}" y2="${B[1].toFixed(1)}" stroke="#fff" stroke-width="1.2"/>`;}
+    for(let j=0;j*s<=tV+1e-9;j++){const A=pt(0,j*s),B=pt(tU,j*s);o2+=`<line x1="${A[0].toFixed(1)}" y1="${A[1].toFixed(1)}" x2="${B[0].toFixed(1)}" y2="${B[1].toFixed(1)}" stroke="#fff" stroke-width="1.2"/>`;}
+    o2+=`<polygon ${poly([pt(0,0),pt(lenU,0),pt(lenU,lenV),pt(0,lenV)])} fill="none" stroke="var(--main)" stroke-width="1.5" stroke-linejoin="round"/>`;
+    return o2;
+  }
+  // faces: right(y=0): U=x,V=z ; left(x=0): U=y,V=z ; top(z=c): U=x,V=y
+  const right=face([0,0,0],[1,0,0],[0,0,1],a,c,tints.right);
+  const left =face([0,0,0],[0,1,0],[0,0,1],b,c,tints.left);
+  const top  =face([0,0,c],[1,0,0],[0,1,0],a,b,tints.top);
+  // labels
+  const la=P(a/2,0,0), lb=P(0,b/2,0), lc=P(0,0,c/2);
+  const labels=`
+    <text x="${la[0].toFixed(1)}" y="${(la[1]+18).toFixed(1)}" text-anchor="middle" font-size="13" fill="var(--a)">${a}</text>
+    <text x="${(lb[0]).toFixed(1)}" y="${(lb[1]+18).toFixed(1)}" text-anchor="middle" font-size="13" fill="var(--b)">${b}</text>
+    <text x="${(lc[0]-12).toFixed(1)}" y="${lc[1].toFixed(1)}" text-anchor="end" font-size="13" fill="var(--c)">${c}</text>`;
+  const wpx=(a+b)*c30*u+pad*2, hpx=(a+b)*s30*u+c*u+pad*2+8;
+  $('#tileSvg').innerHTML=`<svg viewBox="0 0 ${wpx.toFixed(0)} ${hpx.toFixed(0)}" width="${wpx.toFixed(0)}" role="img" aria-label="Caja ${a} por ${b} por ${c}, cubo ${s}">${top}${left}${right}${labels}</svg>`;
+  const nx=Math.floor(a/s), ny=Math.floor(b/s), nz=Math.floor(c/s);
+  const countTxt=exact?`Caben <b>${nx} × ${ny} × ${nz} = ${nx*ny*nz}</b> cubos de arista ${s}.`:'';
+  tileVerdictText(exact,exact&&s===g,s,g,true,countTxt);
+}
+
+/* ---------- 4 · método ---------- */
+function facHTML(arr){
+  if(arr.length===0) return '<span class="fac">1</span>';
+  return arr.map(([p,e])=>`<span class="fac" data-p="${p}">${p}${e>1?`<sup>${e}</sup>`:''}</span>`).join('<span class="times"> × </span>');
+}
+function commonFactors(ns){
+  const facs=ns.map(factorizar);
+  const maps=facs.map(f=>Object.fromEntries(f));
+  const common=[];
+  for(const p of Object.keys(maps[0])){ if(maps.every(m=>m[+p])) common.push([+p,Math.min(...maps.map(m=>m[+p]))]); }
+  common.sort((x,y)=>x[0]-y[0]);
+  return {facs,common};
+}
+function renderMetodo(){
+  const ns=state.nums, g=gcdAll(ns);
+  const {facs,common}=commonFactors(ns);
+  const setC=new Map(common);
+  // tabla vertical española (número │ primo)
+  const ft=$('#facTabs'); ft.innerHTML='';
+  ns.forEach((n,i)=>{
+    const col=el('div','ftab '+NAME[i]);
+    col.appendChild(el('p','who',NAME[i]+' = '+n));
+    const primes=primosOrden(n);
+    const cnt={};
+    let v=n;
+    primes.forEach(p=>{
+      const row=el('div','frow');
+      row.appendChild(el('span','fn',v));
+      const fp=el('span','fp',p);
+      cnt[p]=(cnt[p]||0);
+      if(setC.has(p)&&cnt[p]<setC.get(p)){fp.classList.add('hit');}
+      cnt[p]++;
+      row.appendChild(fp);
+      col.appendChild(row);
+      v/=p;
+    });
+    const last=el('div','frow');
+    last.appendChild(el('span','fn','1'));
+    last.appendChild(el('span','fp',''));
+    col.appendChild(last);
+    ft.appendChild(col);
+  });
+  // forma exponencial
+  const host=$('#methodHost'); host.innerHTML='';
+  ns.forEach((n,i)=>{
+    const line=el('div','facline '+NAME[i]);
+    line.innerHTML=`<span class="who">${NAME[i]} = ${n}</span>${facHTML(facs[i])}`;
+    host.appendChild(line);
+  });
+  host.querySelectorAll('.fac').forEach(f=>{ if(setC.has(parseInt(f.dataset.p,10))) f.classList.add('hit'); });
+  const build=$('#mBuild');
+  if(common.length===0){
+    build.innerHTML=`No hay factores primos comunes → M.C.D. = <span class="res">1</span> <span class="note">(son primos entre sí)</span>`;
+  } else {
+    const expr=common.map(([p,e])=>e>1?`${p}<sup>${e}</sup>`:`${p}`).join(' <span class="times">×</span> ');
+    build.innerHTML=`M.C.D. = ${expr} = <span class="res">${g}</span>`;
+  }
+}
+
+/* ---------- 5 · fracciones ---------- */
+const frac={n:12,d:18,chain:[]};
+function resetFrac(){ frac.n=state.nums[0]; frac.d=state.nums[1]; frac.chain=[]; renderFrac(); }
+function fracHTML(n,d){ return `<span class="frac"><span class="fnum">${n}</span><span class="fden">${d}</span></span>`; }
+function renderFrac(){
+  const a=state.nums[0], b=state.nums[1], g0=mcd(a,b);
+  $('#fracIntro').innerHTML=`Con el M.C.D. se simplifican fracciones en <b>un solo paso</b>: se divide arriba y abajo entre él. Prueba a llegar a la fracción irreducible dividiendo por divisores comunes.`
+    +(state.nums.length===3?' <span class="note">(Con tres números activos, la fracción usa A y B.)</span>':'');
+  let flow=fracHTML(a,b);
+  let n=a, d=b;
+  frac.chain.forEach(k=>{
+    n/=k; d/=k;
+    flow+=`<span class="step"><span class="divlab">÷ ${k}</span><span class="farrow">→</span></span>`+fracHTML(n,d);
+  });
+  const gNow=mcd(frac.n,frac.d);
+  if(gNow===1) flow+=`<span class="irred">irreducible</span>`;
+  $('#fracFlow').innerHTML=flow;
+  const btns=$('#fracBtns'); btns.innerHTML='';
+  if(gNow>1){
+    btns.appendChild(el('span','lbl','Dividir arriba y abajo entre'));
+    const opts=divisores(gNow).filter(x=>x>1);
+    opts.forEach(k=>{
+      const bt=el('button','btn',k);
+      if(k===gNow) bt.classList.add('primary');
+      bt.addEventListener('click',()=>{ frac.n/=k; frac.d/=k; frac.chain.push(k); renderFrac(); });
+      btns.appendChild(bt);
+    });
+  }
+  const rb=el('button','btn','Reiniciar');
+  rb.addEventListener('click',resetFrac);
+  btns.appendChild(rb);
+  const note=$('#fracNote');
+  if(g0===1){
+    note.className='explain fnote';
+    note.innerHTML=`M.C.D.(${a}, ${b}) = 1: la fracción ${a}/${b} <b>ya es irreducible</b>.`;
+  } else if(gNow===1){
+    const one=frac.chain.length===1&&frac.chain[0]===g0;
+    note.className='explain fnote';
+    note.innerHTML=one
+      ?`Has dividido entre el M.C.D. (${g0}) y has llegado a la irreducible <b>en un solo paso</b>.`
+      :`Has llegado en ${frac.chain.length} pasos (${frac.chain.map(k=>'÷ '+k).join(', ')}). Dividiendo entre el M.C.D. (${g0}) habrías llegado <b>de una sola vez</b>: fíjate en que ${frac.chain.join(' × ')} = ${frac.chain.reduce((x,y)=>x*y,1)}.`;
+  } else {
+    note.className='explain fnote empty';
+    note.innerHTML=`Aún se puede simplificar: numerador y denominador comparten divisores. El botón resaltado es el M.C.D. actual.`;
+  }
+}
+
+/* ---------- 6 · ponte a prueba ---------- */
+const pract={a:0,b:0,ok:0,solved:false,failed:false};
+function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function nuevoReto(){
+  const gs=[2,2,3,3,4,4,5,6,6,7,8,9,10,12];
+  const g=gs[ri(0,gs.length-1)];
+  let m=1,n=2,guard=0;
+  do{ m=ri(1,Math.floor(60/g)); n=ri(1,Math.floor(60/g)); guard++; }
+  while((mcd(m,n)!==1||m===n||g*m<2||g*n<2)&&guard<300);
+  if(mcd(m,n)!==1||m===n){m=1;n=2;}
+  pract.a=g*m; pract.b=g*n; pract.solved=false; pract.failed=false;
+  $('#prQ').innerHTML=`M.C.D.(<span class="pa">${pract.a}</span>, <span class="pb">${pract.b}</span>) =`;
+  $('#prIn').value=''; $('#prFeed').textContent=''; $('#prFeed').className='pr-feed';
+  $('#prHint').hidden=true;
+  $('#prIn').focus();
+}
+function facTexto(n){ return factorizar(n).map(([p,e])=>e>1?`${p}<sup>${e}</sup>`:p).join(' × '); }
+function comprobar(){
+  if(pract.solved) return;
+  const v=parseInt($('#prIn').value,10);
+  const g=mcd(pract.a,pract.b);
+  const f=$('#prFeed');
+  if(isNaN(v)){ f.className='pr-feed no'; f.textContent='Escribe un número.'; return; }
+  if(v===g){
+    pract.solved=true;
+    if(!pract.failed){ pract.ok++; $('#prScore').textContent=pract.ok; }
+    f.className='pr-feed ok';
+    f.innerHTML=`✓ Correcto: M.C.D.(${pract.a}, ${pract.b}) = <b>${g}</b>. Pulsa «Nuevo reto» para seguir.`;
+  } else {
+    pract.failed=true;
+    f.className='pr-feed no';
+    f.innerHTML=(v>=1&&pract.a%v===0&&pract.b%v===0)
+      ?`✗ ${v} es un divisor común, pero no el <b>mayor</b>. Sigue buscando.`
+      :`✗ ${v} no divide a los dos números a la vez. Usa la pista si lo necesitas.`;
+  }
+}
+function pista(){
+  const h=$('#prHint');
+  h.hidden=false;
+  h.innerHTML=`${pract.a} = <span class="fac">${facTexto(pract.a)}</span> &nbsp;·&nbsp; ${pract.b} = <span class="fac">${facTexto(pract.b)}</span>. Toma los factores comunes con el menor exponente y multiplícalos.`;
+}
+
+/* ---------- tabs ---------- */
+const tabs=[...document.querySelectorAll('.tab')];
+const panels=tabs.map((t,i)=>$('#p'+i));
+const N=tabs.length;
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>selectTab(i));
+  t.addEventListener('keydown',e=>{
+    let j=null;
+    if(e.key==='ArrowRight') j=(i+1)%N;
+    if(e.key==='ArrowLeft')  j=(i+N-1)%N;
+    if(e.key==='Home') j=0;
+    if(e.key==='End')  j=N-1;
+    if(j!==null){e.preventDefault();selectTab(j);tabs[j].focus();}
+  });
+});
+function selectTab(i){
+  tabs.forEach((t,j)=>{t.setAttribute('aria-selected',j===i);t.tabIndex=(j===i)?0:-1;});
+  panels.forEach((p,j)=>p.hidden=j!==i);
+  if(i===2){ state.nums.length===3?drawBox():drawRect(); }
+}
+
+/* ---------- inputs ---------- */
+document.querySelectorAll('.stepper button.pm').forEach(btn=>{
+  btn.addEventListener('click',()=>{const i=+btn.dataset.i,d=+btn.dataset.d; if(i<state.nums.length) setNum(i,state.nums[i]+d);});
+});
+['in0','in1','in2'].forEach((id,i)=>{const inp=$('#'+id); if(inp) inp.addEventListener('change',e=>{ if(i<state.nums.length) setNum(i,e.target.value);});});
+$('#addC').addEventListener('click',addThird);
+$('#rmC').addEventListener('click',removeThird);
+$('#tileRange').addEventListener('input',e=>{state.tile=parseInt(e.target.value,10);$('#tileVal').textContent=state.tile;state.nums.length===3?drawBox():drawRect();});
+window.addEventListener('resize',()=>{ if(!panels[2].hidden) (state.nums.length===3?drawBox():drawRect()); });
+$('#prCheck').addEventListener('click',comprobar);
+$('#prHintBtn').addEventListener('click',pista);
+$('#prNew').addEventListener('click',nuevoReto);
+$('#prIn').addEventListener('keydown',e=>{ if(e.key==='Enter') comprobar(); });
+
+/* go */
+afterChange();
+nuevoReto();
+</script>
+</body>
+</html>

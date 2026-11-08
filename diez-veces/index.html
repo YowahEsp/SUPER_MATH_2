@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Diez veces más, diez veces menos · Enteros y decimales</title>
+<style>
+  :root{
+    --bg:#f6f1e6; --surface:#ffffff; --surface-soft:#fbf5e9;
+    --line:#e6dac3; --ink:#2a2017; --ink-soft:#71614f; --ink-faint:#a4937c;
+    --amber:#c97a1e; --amber-deep:#8f580f; --amber-soft:#f7e6c9;
+    /* órdenes enteros (grupos) */
+    --w1:#d3675f; --w2:#b6332c; --w3:#7d211c;
+    --w1-soft:#f7e1de; --w2-soft:#f3d6d1; --w3-soft:#eccac4;
+    /* órdenes decimales (partes) */
+    --f1:#5aa544; --f2:#3a8a3f; --f3:#246b2e;
+    --f1-soft:#e2f0d9; --f2-soft:#d9ead6; --f3-soft:#cfe3cd;
+    --good:#3f8b4c; --good-soft:#e3f1e4; --bad:#c1432f; --bad-soft:#fbe7e2;
+    --shadow:0 18px 40px -22px rgba(36,28,20,.35);
+    --radius-lg:20px; --radius-md:14px; --radius-sm:9px;
+    --font-display: Georgia,'Iowan Old Style','Times New Roman',serif;
+    --font-body: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --font-mono: 'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;overflow-x:hidden;}
+  body{background:radial-gradient(900px 480px at 14% -8%,#fffaf0 0%,transparent 60%),var(--bg);
+    color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;line-height:1.5;}
+  .page{max-width:1100px;margin:0 auto;padding:30px 22px 64px;}
+
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font:700 11.5px/1 var(--font-body);
+    letter-spacing:.14em;text-transform:uppercase;color:var(--amber-deep);}
+  .eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--w2);}
+  .eyebrow .dot.two{background:var(--f2);}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,4.2vw,44px);
+    line-height:1.05;margin:.32em 0 .18em;letter-spacing:-.01em;}
+  .lead{max-width:66ch;color:var(--ink-soft);font-size:16px;margin:0;}
+  .lead b{color:var(--ink);}
+
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 20px;}
+  .tab-btn{display:inline-flex;align-items:center;gap:9px;font:600 14.5px var(--font-body);
+    color:var(--ink-soft);padding:10px 15px 11px;border-radius:999px;cursor:pointer;
+    background:var(--surface-soft);border:1px solid var(--line);transition:background .15s,border-color .15s,color .15s;}
+  .tab-btn .num{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;
+    border-radius:50%;font:700 12px var(--font-mono);background:#fff;border:1px solid var(--line);color:var(--ink-soft);}
+  .tab-btn.is-active{color:var(--ink);border-color:var(--amber);background:var(--amber-soft);}
+  .tab-btn.is-active .num{background:var(--amber);border-color:var(--amber);color:#fff;}
+  .tab-btn:hover:not(.is-active){background:#fff;}
+  .tab-btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px;}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);padding:22px 22px 24px;margin-bottom:18px;}
+  .panel h2{font-family:var(--font-display);font-size:21px;margin:0 0 4px;color:var(--ink);font-weight:600;}
+  .panel .sub{color:var(--ink-soft);font-size:15px;margin:0 0 16px;max-width:72ch;}
+  [hidden]{display:none!important;}
+
+  /* segmented */
+  .segmented{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;max-width:560px;margin-bottom:18px;}
+  .segmented button{flex:1;padding:10px 6px;border:none;background:#fff;cursor:pointer;
+    font:600 13.5px var(--font-body);color:var(--ink-soft);border-right:1px solid var(--line);}
+  .segmented button:last-child{border-right:none;}
+  .segmented button.is-active{background:var(--amber);color:#fff;}
+  .segmented button:focus-visible{outline:3px solid var(--amber);outline-offset:-3px;}
+
+  /* escena a escala */
+  .escena{overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--surface-soft);
+    border:1px solid var(--line);border-radius:var(--radius-md);padding:18px 16px 10px;}
+  .escena svg{display:block;height:auto;}
+  .escala-chip{display:inline-flex;align-items:center;gap:6px;font:600 12px var(--font-mono);
+    color:var(--ink-soft);background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;margin-top:10px;}
+  .factor{margin-top:16px;display:flex;gap:11px;align-items:flex-start;background:#fff;
+    border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:var(--radius-sm);
+    padding:12px 14px;font-size:14.5px;color:var(--ink-soft);}
+  .factor b{color:var(--ink);} .factor .mk{font-family:var(--font-mono);font-weight:700;color:var(--ink);}
+  .scroll-hint{display:none;color:var(--ink-faint);font-size:12.5px;text-align:center;margin-top:6px;}
+
+  /* coloca la cifra */
+  .entrybar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:6px;}
+  .num-input{font:600 22px var(--font-mono);color:var(--ink);width:200px;max-width:100%;
+    padding:11px 14px;border:1.5px solid var(--line);border-radius:var(--radius-md);background:#fff;text-align:center;}
+  .num-input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft);}
+  .btn{font:600 14.5px var(--font-body);padding:11px 17px;border-radius:var(--radius-md);
+    border:1px solid var(--line);cursor:pointer;color:var(--ink);background:#fff;transition:background .15s,border-color .15s;}
+  .btn:hover{background:var(--surface-soft);}
+  .btn-primary{background:var(--amber);color:#fff;border-color:var(--amber);}
+  .btn-primary:hover{background:var(--amber-deep);border-color:var(--amber-deep);}
+  .btn:focus-visible,.chip:focus-visible{outline:3px solid var(--amber);outline-offset:2px;}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:6px;color:var(--ink-faint);font-size:13.5px;}
+  .chip{font:600 13.5px var(--font-mono);padding:5px 11px;border-radius:999px;cursor:pointer;
+    background:var(--surface-soft);border:1px solid var(--line);color:var(--ink-soft);}
+  .chip:hover{background:#fff;border-color:var(--amber);color:var(--ink);}
+  .errline{color:var(--bad);font-size:13.5px;min-height:1.2em;margin-top:8px;font-weight:600;}
+
+  .pv-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:6px;}
+  .pv{display:flex;align-items:flex-end;gap:0;justify-content:center;min-width:430px;padding:6px 2px;}
+  .pv .col{display:flex;flex-direction:column;align-items:center;width:62px;}
+  .pv .badge{font:700 12px var(--font-mono);color:#fff;border-radius:8px;padding:2px 0;width:34px;text-align:center;margin-bottom:6px;}
+  .pv .cifra{font:700 30px var(--font-mono);width:54px;height:58px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);border-radius:8px;background:#fff;}
+  .pv .cifra.off{color:var(--ink-faint);background:var(--surface-soft);}
+  .pv .nom{font-size:11.5px;color:var(--ink-soft);margin-top:6px;text-align:center;line-height:1.2;}
+  .pv .val{font:600 11px var(--font-mono);color:var(--ink-faint);margin-top:2px;}
+  .pv .coma{font:700 30px var(--font-mono);align-self:center;color:var(--ink);width:16px;text-align:center;margin:0 2px;padding-bottom:26px;}
+  .pv .col.on .cifra{border-width:2px;}
+  .pv .col.w .badge{background:var(--w2);} .pv .col.w.on .cifra{border-color:var(--w2);background:var(--w2-soft);}
+  .pv .col.u .badge{background:var(--amber);} .pv .col.u.on .cifra{border-color:var(--amber);background:var(--amber-soft);}
+  .pv .col.f .badge{background:var(--f2);} .pv .col.f.on .cifra{border-color:var(--f2);background:var(--f2-soft);}
+  .pv .col.w .nom{color:var(--w2);} .pv .col.f .nom{color:var(--f2);} .pv .col.u .nom{color:var(--amber-deep);}
+
+  .readout{margin-top:16px;background:var(--surface-soft);border:1px solid var(--line);border-radius:var(--radius-md);padding:14px 16px;}
+  .readout .eyebrow{font-size:10.5px;color:var(--ink-faint);}
+  .read-line{font-family:var(--font-display);font-size:18px;margin:4px 0 2px;color:var(--ink);}
+  .read-line .cifra{font-family:var(--font-mono);font-weight:700;}
+  .aportes{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .ap{display:inline-flex;align-items:baseline;gap:8px;padding:7px 11px;border-radius:999px;font-size:13.5px;border:1px solid var(--line);background:#fff;}
+  .ap .d{font:700 15px var(--font-mono);} .ap .n{color:var(--ink-soft);} .ap .v{font:600 13px var(--font-mono);color:var(--ink);margin-left:2px;}
+  .ap.w{border-color:var(--w2);background:var(--w2-soft);} .ap.w .d{color:var(--w3);}
+  .ap.u{border-color:var(--amber);background:var(--amber-soft);} .ap.u .d{color:var(--amber-deep);}
+  .ap.f{border-color:var(--f2);background:var(--f2-soft);} .ap.f .d{color:var(--f3);}
+
+  /* referencia */
+  .ref-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .ref{min-width:0;border:1px solid var(--line);border-radius:var(--radius-md);padding:16px 17px;background:var(--surface-soft);}
+  .ref h3{font-family:var(--font-display);font-size:17px;margin:0 0 8px;font-weight:600;display:flex;align-items:center;gap:9px;}
+  .ref h3 .b{width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font:700 13px var(--font-mono);color:#fff;flex:none;}
+  .ref p{margin:0 0 8px;font-size:14px;color:var(--ink-soft);} .ref p:last-child{margin-bottom:0;} .ref b{color:var(--ink);}
+  .ref .mk{font-family:var(--font-mono);font-weight:700;color:var(--ink);}
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0;}
+  .mini{width:100%;border-collapse:collapse;font-size:13.5px;min-width:280px;}
+  .mini th,.mini td{padding:7px 8px;text-align:center;border:1px solid var(--line);}
+  .mini th{font-weight:700;background:#fff;} .mini td{font-family:var(--font-mono);background:#fff;}
+  .mini .wcol{color:var(--w2);} .mini .fcol{color:var(--f2);} .mini .ucol{background:var(--amber-soft);color:var(--amber-deep);font-weight:700;}
+  .trap{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line);}
+  .trap:last-child{border-bottom:none;}
+  .trap .x{color:var(--bad);font-weight:700;font-family:var(--font-mono);}
+  .trap .ok{color:var(--good);font-weight:700;font-family:var(--font-mono);}
+  .trap .ar{color:var(--ink-faint);} .trap .mk{font-family:var(--font-mono);font-weight:700;color:var(--ink);}
+
+  /* quiz */
+  .quiz-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .score{display:flex;gap:18px;font-size:14px;color:var(--ink-soft);}
+  .score strong{font-family:var(--font-mono);color:var(--ink);font-size:18px;}
+  .qcard{border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-soft);padding:20px;}
+  .qprompt{font-size:16px;margin:0 0 6px;color:var(--ink);} .qprompt b{color:var(--ink);}
+  .qnumber{font-family:var(--font-mono);font-size:clamp(26px,6vw,40px);font-weight:700;letter-spacing:.04em;text-align:center;margin:10px 0 4px;color:var(--ink);}
+  .qnumber .hl{color:var(--amber-deep);background:var(--amber-soft);border-radius:6px;padding:0 .12em;}
+  .qhint{text-align:center;color:var(--ink-faint);font-size:13px;margin-bottom:16px;}
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .opt{text-align:left;padding:13px 15px;border:1.5px solid var(--line);border-radius:var(--radius-sm);background:#fff;cursor:pointer;font:600 15px var(--font-body);color:var(--ink);transition:border-color .12s,background .12s;}
+  .opt:hover:not(:disabled){border-color:var(--amber);} .opt:focus-visible{outline:3px solid var(--amber);outline-offset:2px;}
+  .opt.correct{border-color:var(--good);background:var(--good-soft);} .opt.wrong{border-color:var(--bad);background:var(--bad-soft);} .opt:disabled{cursor:default;}
+  .qinput-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .feedback{margin-top:16px;border-radius:var(--radius-sm);padding:0;font-size:14.5px;min-height:1px;}
+  .feedback.show{padding:11px 14px;}
+  .feedback.good{background:var(--good-soft);color:var(--good);border:1px solid var(--good);}
+  .feedback.bad{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad);}
+  .qfoot{display:flex;justify-content:flex-end;margin-top:16px;}
+
+  /* máquina ×10 */
+  .maq-ops{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px;}
+  .btn-op{font:700 16px var(--font-mono);padding:11px 20px;}
+  .btn-op:disabled{opacity:.45;cursor:default;}
+  .op-line{margin-top:14px;background:var(--surface-soft);border:1px solid var(--line);
+    border-left:4px solid var(--amber);border-radius:var(--radius-sm);padding:11px 14px;
+    font-size:14.5px;color:var(--ink-soft);min-height:1.4em;}
+  .op-line .mk{font-family:var(--font-mono);font-weight:700;color:var(--ink);}
+  .op-line b{color:var(--ink);}
+
+  /* animaciones */
+  @keyframes popIn{from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:none;}}
+  @keyframes desdeDer{from{opacity:.15;transform:translateX(62px);}to{opacity:1;transform:none;}}
+  @keyframes desdeIzq{from{opacity:.15;transform:translateX(-62px);}to{opacity:1;transform:none;}}
+  @keyframes fbIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:none;}}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .pv .col.anim-pop{animation:popIn .35s both;}
+  .pv.mov-izq .cifra{animation:desdeDer .4s ease both;}
+  .pv.mov-der .cifra{animation:desdeIzq .4s ease both;}
+  .feedback.show{animation:fbIn .22s ease;}
+  .escena svg{animation:fadeIn .3s ease;}
+
+  footer{margin-top:22px;color:var(--ink-faint);font-size:12.5px;text-align:center;}
+
+  @media (max-width:720px){
+    .page{padding:24px 16px 48px;}
+    .ref-grid{grid-template-columns:1fr;}
+    .options{grid-template-columns:1fr;}
+    .scroll-hint{display:block;}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <span class="eyebrow"><span class="dot"></span><span class="dot two"></span> Enteros y decimales</span>
+    <h1>Diez veces más, diez veces menos</h1>
+    <p class="lead">El valor de una cifra depende de su sitio. Cada orden vale <b>diez veces</b> el de su derecha y la <b>décima parte</b> del de su izquierda. Por eso una <b>decena</b> (10) y una <b>décima</b> (0,1) no se parecen en nada. Aquí lo verás siempre <b>a escala real</b>, sin trampas de tamaño.</p>
+  </header>
+
+  <nav class="tabs" id="tabNav" role="tablist" aria-label="Secciones">
+    <button class="tab-btn is-active" data-tab="1" role="tab" aria-selected="true" aria-controls="panel-1"><span class="num">1</span>A escala</button>
+    <button class="tab-btn" data-tab="2" role="tab" aria-selected="false" aria-controls="panel-2"><span class="num">2</span>Coloca la cifra</button>
+    <button class="tab-btn" data-tab="3" role="tab" aria-selected="false" aria-controls="panel-3"><span class="num">3</span>La máquina del ×10</button>
+    <button class="tab-btn" data-tab="4" role="tab" aria-selected="false" aria-controls="panel-4"><span class="num">4</span>No te confundas</button>
+    <button class="tab-btn" data-tab="5" role="tab" aria-selected="false" aria-controls="panel-5"><span class="num">5</span>Practica</button>
+  </nav>
+
+  <!-- ============ TAB 1 ============ -->
+  <section class="panel" id="panel-1" role="tabpanel" aria-label="A escala">
+    <h2>El tamaño no engaña</h2>
+    <p class="sub">Cada pareja que suele confundirse, dibujada respetando el tamaño real. El cuadrado de la <b>unidad</b> mide siempre lo mismo dentro de cada escena: una parte es de verdad un trocito de la unidad; un grupo es de verdad muchas unidades.</p>
+
+    <div class="segmented" id="parSel" aria-label="Pareja a comparar">
+      <button data-par="1" class="is-active">Decena y décima</button>
+      <button data-par="2">Centena y centésima</button>
+      <button data-par="3">Millar y milésima</button>
+    </div>
+
+    <div class="escena" id="escena"></div>
+    <div class="scroll-hint">↔ desliza para ver la escena completa</div>
+    <div class="factor" id="factor"></div>
+  </section>
+
+  <!-- ============ TAB 2 ============ -->
+  <section class="panel" id="panel-2" hidden role="tabpanel" aria-label="Coloca la cifra">
+    <h2>Cada cifra, en su sitio</h2>
+    <p class="sub">Escribe un número (admite coma o punto). Cada cifra cae en su orden y te digo cuánto vale de verdad y cómo se lee. El mismo dígito vale diez veces más una casilla a la izquierda y diez veces menos una a la derecha.</p>
+    <div class="entrybar">
+      <input class="num-input" id="pvInput" inputmode="decimal" value="2407,5" aria-label="Número">
+      <button class="btn btn-primary" id="pvBtn">Colocar</button>
+    </div>
+    <div class="chips">Prueba:
+      <span class="chip" data-v="2407,5">2407,5</span>
+      <span class="chip" data-v="60,06">60,06</span>
+      <span class="chip" data-v="305,07">305,07</span>
+      <span class="chip" data-v="9,999">9,999</span>
+    </div>
+    <div class="errline" id="pvError" aria-live="polite"></div>
+    <div class="pv-wrap"><div class="pv" id="pvChart"></div></div>
+    <div class="readout" id="pvRead"></div>
+  </section>
+
+  <!-- ============ TAB 3 · MÁQUINA ×10 ============ -->
+  <section class="panel" id="panel-3" hidden role="tabpanel" aria-label="La máquina del por diez">
+    <h2>Multiplicar y dividir por 10 sin calcular</h2>
+    <p class="sub">Carga un número y dale a los botones. Fíjate bien: <b>ninguna cifra cambia</b>; solo saltan de casilla. Un sitio a la izquierda y cada cifra vale <b>diez veces más</b>; un sitio a la derecha y vale <b>diez veces menos</b>.</p>
+    <div class="entrybar">
+      <input class="num-input" id="maqInput" inputmode="decimal" value="24,7" aria-label="Número para la máquina">
+      <button class="btn btn-primary" id="maqLoad">Cargar</button>
+    </div>
+    <div class="chips">Prueba:
+      <span class="chip maq-chip" data-v="24,7">24,7</span>
+      <span class="chip maq-chip" data-v="3,45">3,45</span>
+      <span class="chip maq-chip" data-v="60">60</span>
+      <span class="chip maq-chip" data-v="0,082">0,082</span>
+    </div>
+    <div class="errline" id="maqError" aria-live="polite"></div>
+    <div class="maq-ops">
+      <button class="btn btn-op" id="maqPor10" title="Multiplicar por diez">⟵ ×10</button>
+      <button class="btn btn-op" id="maqDiv10" title="Dividir por diez">÷10 ⟶</button>
+    </div>
+    <div class="pv-wrap"><div class="pv" id="maqChart" aria-live="polite"></div></div>
+    <div class="op-line" id="maqOp" aria-live="polite"></div>
+  </section>
+
+  <!-- ============ TAB 4 ============ -->
+  <section class="panel" id="panel-4" hidden role="tabpanel" aria-label="No te confundas">
+    <h2>Tres ideas para no confundirte nunca</h2>
+    <p class="sub">Memoriza esto y la trampa desaparece.</p>
+    <div class="ref-grid">
+      <div class="ref">
+        <h3><span class="b" style="background:var(--amber)">1</span> La terminación lo dice</h3>
+        <p><b>‑ena</b> (dec<b>ena</b>, cent<b>ena</b>) y <b>millar</b> nombran <b>grupos</b> de unidades: son <b>mayores</b> que la unidad.</p>
+        <p><b>‑ésima</b> (déc<b>ima</b>, cent<b>ésima</b>, mil<b>ésima</b>) nombra <b>partes</b> de la unidad: son <b>menores</b>.</p>
+        <p>Si acaba en <b>‑ésima/‑ésimo</b>, es un trocito y lleva <b>coma</b>.</p>
+      </div>
+      <div class="ref">
+        <h3><span class="b" style="background:var(--w2)">2</span> Cada paso vale diez veces</h3>
+        <p>Hacia la izquierda <b>×10</b>; hacia la derecha <b>÷10</b>.</p>
+        <div class="tbl-wrap"><table class="mini">
+          <tr><th class="wcol">C</th><th class="wcol">D</th><th class="ucol">U</th><th class="fcol">d</th><th class="fcol">c</th></tr>
+          <tr><td class="wcol">100</td><td class="wcol">10</td><td class="ucol">1</td><td class="fcol">0,1</td><td class="fcol">0,01</td></tr>
+        </table></div>
+        <p style="margin-top:8px">La <b>unidad</b> es la referencia de todo.</p>
+      </div>
+      <div class="ref">
+        <h3><span class="b" style="background:var(--f2)">3</span> El tamaño las separa</h3>
+        <p>Una <b>decena</b> y una <b>décima</b> no se parecen: entre ellas hay un factor de <span class="mk">100</span>.</p>
+        <div class="tbl-wrap"><table class="mini">
+          <tr><th>Pareja</th><th class="wcol">Grupo</th><th class="fcol">Parte</th><th>Factor</th></tr>
+          <tr><td>decena · décima</td><td class="wcol">10</td><td class="fcol">0,1</td><td class="mk">100</td></tr>
+          <tr><td>centena · centésima</td><td class="wcol">100</td><td class="fcol">0,01</td><td class="mk">10 000</td></tr>
+          <tr><td>millar · milésima</td><td class="wcol">1000</td><td class="fcol">0,001</td><td class="mk">1 000 000</td></tr>
+        </table></div>
+      </div>
+      <div class="ref">
+        <h3><span class="b" style="background:var(--bad)">!</span> Trampas típicas</h3>
+        <div class="trap"><span class="mk">0,3</span><span class="ar">→</span> son <span class="ok">tres décimas</span><span class="ar">·</span> no <span class="x">tres decenas</span> (30)</div>
+        <div class="trap"><span class="mk">0,07</span><span class="ar">→</span> son <span class="ok">siete centésimas</span><span class="ar">·</span> no <span class="x">siete centenas</span> (700)</div>
+        <div class="trap"><span class="mk">40</span><span class="ar">→</span> son <span class="ok">cuatro decenas</span><span class="ar">·</span> no <span class="x">cuatro décimas</span> (0,4)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 4 ============ -->
+  <section class="panel" id="panel-5" hidden role="tabpanel" aria-label="Practica">
+    <div class="quiz-head">
+      <div>
+        <h2 style="margin-bottom:2px">Practica</h2>
+        <p class="sub" style="margin:0">Distingue grupos de partes. Lee bien la cifra y mira su columna.</p>
+      </div>
+      <div class="score"><span>Aciertos <strong id="qHits">0</strong></span><span>Racha <strong id="qStreak">0</strong></span></div>
+    </div>
+    <div class="qcard" id="qCard"></div>
+  </section>
+
+  <footer>Material para Educación de Personas Adultas · funciona sin conexión, en un solo archivo.</footer>
+</div>
+
+<script>
+"use strict";
+
+/* ====================================================================
+   MODELO DE ÓRDENES
+   ==================================================================== */
+const ORD = [
+  {key:'UM', abbr:'UM', nom:'unidades de millar', nomCorto:'millares', qs:'millar', qp:'millares', masc:true, valor:1000,  lado:'w', cls:'w', col:'var(--w3)', soft:'var(--w3-soft)'},
+  {key:'C',  abbr:'C',  nom:'centenas',           nomCorto:'centenas', qs:'centena', qp:'centenas', valor:100,   lado:'w', cls:'w', col:'var(--w2)', soft:'var(--w2-soft)'},
+  {key:'D',  abbr:'D',  nom:'decenas',            nomCorto:'decenas',  qs:'decena', qp:'decenas', valor:10,    lado:'w', cls:'w', col:'var(--w1)', soft:'var(--w1-soft)'},
+  {key:'U',  abbr:'U',  nom:'unidades',           nomCorto:'unidades', qs:'unidad', qp:'unidades', valor:1,     lado:'u', cls:'u', col:'var(--amber)', soft:'var(--amber-soft)'},
+  {key:'d',  abbr:'d',  nom:'décimas',            nomCorto:'décimas',  qs:'décima', qp:'décimas', valor:0.1,   lado:'f', cls:'f', col:'var(--f1)', soft:'var(--f1-soft)'},
+  {key:'c',  abbr:'c',  nom:'centésimas',         nomCorto:'centésimas', qs:'centésima', qp:'centésimas', valor:0.01, lado:'f', cls:'f', col:'var(--f2)', soft:'var(--f2-soft)'},
+  {key:'m',  abbr:'m',  nom:'milésimas',          nomCorto:'milésimas', qs:'milésima', qp:'milésimas', valor:0.001, lado:'f', cls:'f', col:'var(--f3)', soft:'var(--f3-soft)'}
+];
+const IDX = {}; ORD.forEach((o,i)=>IDX[o.key]=i);
+
+function parseNum(txt){
+  if(typeof txt!=='string') txt=String(txt);
+  let s=txt.trim().replace(/\s/g,'').replace(',', '.');
+  if(s==='') return null;
+  if(!/^-?\d*\.?\d*$/.test(s)) return null;
+  if(s==='.'||s==='-') return null;
+  const neg = s.startsWith('-'); if(neg) s=s.slice(1);
+  let [ent='0',dec='']=s.split('.');
+  ent=ent.replace(/^0+(?=\d)/,'')||'0';
+  if(ent.length>4) return {error:'maxent'};
+  if(dec.length>3) dec=dec.slice(0,3);
+  return {neg, ent, dec, str:(neg?'-':'')+ent+(dec?(','+dec):'')};
+}
+function digitsOf(p){
+  const ent=p.ent.padStart(4,'0'); const dec=(p.dec||'').padEnd(3,'0');
+  return {UM:+ent[0], C:+ent[1], D:+ent[2], U:+ent[3], d:+dec[0], c:+dec[1], m:+dec[2]};
+}
+function fmtValor(v){ if(v>=1) return String(v); return v.toFixed(3).replace(/0+$/,'').replace(/\.$/,'').replace('.',','); }
+function round(x){ return Math.round(x*1000)/1000; }
+
+/* ---------- lectura en palabras ---------- */
+const UNI=['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+const UNIf=['cero','una','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+const DIEZ=['diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve'];
+const VEINTE=['veinte','veintiuno','veintidós','veintitrés','veinticuatro','veinticinco','veintiséis','veintisiete','veintiocho','veintinueve'];
+const DEC=['','','','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+const CEN=['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+const CENf=['','ciento','doscientas','trescientas','cuatrocientas','quinientas','seiscientas','setecientas','ochocientas','novecientas'];
+function dosCifras(n,fem,apoc){
+  if(n<10){ if(n===1&&apoc) return 'un'; return (fem?UNIf:UNI)[n]; }
+  if(n<20) return DIEZ[n-10];
+  if(n<30){ if(n===21) return fem?'veintiuna':(apoc?'veintiún':'veintiuno'); return VEINTE[n-20]; }
+  const d=Math.floor(n/10), u=n%10;
+  if(u===0) return DEC[d];
+  let uu = u===1 ? (fem?'una':(apoc?'un':'uno')) : (fem?UNIf:UNI)[u];
+  return DEC[d]+' y '+uu;
+}
+function tresCifras(n,fem,apoc){
+  if(n===100) return 'cien';
+  const c=Math.floor(n/100), r=n%100;
+  let s = c>0 ? (fem?CENf:CEN)[c] : '';
+  if(r>0) s += (s?' ':'') + dosCifras(r,fem,apoc);
+  return s;
+}
+function enteroPalabras(n,fem){
+  n=Math.round(n); if(n===0) return 'cero';
+  const miles=Math.floor(n/1000), resto=n%1000; let s='';
+  if(miles>0){ s = miles===1?'mil':tresCifras(miles,false,true)+' mil'; }
+  if(resto>0) s+=(s?' ':'')+tresCifras(resto,fem,false);
+  return s;
+}
+function decimalPalabras(decStr){
+  if(!decStr) return null;
+  const cant=parseInt(decStr,10); if(cant===0) return null;
+  // se lee tal cual está escrito: 0,50 son «cincuenta centésimas», no «cinco décimas»
+  const ordenIdx=decStr.length; const nombreOrd=['','décima','centésima','milésima'][ordenIdx];
+  const palabras=enteroPalabras(cant,true);
+  const plural=cant===1?nombreOrd:nombreOrd+'s';
+  return {cant, texto:palabras+' '+plural};
+}
+function lecturaCompleta(p){
+  const entN=parseInt(p.ent,10); const dec=decimalPalabras(p.dec);
+  if(!dec) return enteroPalabras(entN,false);
+  if(entN===0) return dec.texto;
+  const uni=entN===1?'unidad':'unidades';
+  return enteroPalabras(entN,true)+' '+uni+' y '+dec.texto;
+}
+
+/* ====================================================================
+   TAB 1 · A ESCALA REAL  (SVG generado, proporciones verdaderas)
+   ==================================================================== */
+const C_W='var(--w2)', C_W3='var(--w3)', C_U='var(--amber)', C_F='var(--f2)', C_F3='var(--f3)', C_LINE='var(--line)', C_INK='var(--ink)', C_SOFT='var(--ink-soft)';
+
+function rect(x,y,w,h,fill,stroke,sw){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+(fill||'none')+'"'+(stroke?(' stroke="'+stroke+'" stroke-width="'+(sw||1)+'"'):'')+'/>'; }
+function txt(x,y,s,size,col,weight,anchor){ return '<text x="'+x+'" y="'+y+'" font-family="var(--font-body)" font-size="'+size+'" fill="'+(col||C_INK)+'"'+(weight?(' font-weight="'+weight+'"'):'')+' text-anchor="'+(anchor||'middle')+'">'+s+'</text>'; }
+function mono(x,y,s,size,col,weight,anchor){ return '<text x="'+x+'" y="'+y+'" font-family="var(--font-mono)" font-size="'+size+'" fill="'+(col||C_INK)+'"'+(weight?(' font-weight="'+weight+'"'):'')+' text-anchor="'+(anchor||'middle')+'">'+s+'</text>'; }
+function arrow(x1,x2,y,label){
+  let s='<line x1="'+x1+'" y1="'+y+'" x2="'+(x2-7)+'" y2="'+y+'" stroke="'+C_SOFT+'" stroke-width="1.5"/>';
+  s+='<path d="M'+(x2)+' '+y+' l-8 -4 l0 8 z" fill="'+C_SOFT+'"/>';
+  s+=mono((x1+x2)/2, y-7, label, 12, C_SOFT, '700');
+  return s;
+}
+// cuadrado-unidad subdividido en n partes (vertical strips si n<=10, rejilla si 100), 1 sombreada
+function unidadParte(x,y,U,n,col){
+  let s=rect(x,y,U,U,'#fff',C_LINE,1.2);
+  if(n<=10){
+    const w=U/n;
+    s+=rect(x,y,w,U,col,'none');
+    for(let i=1;i<n;i++) s+='<line x1="'+(x+i*w)+'" y1="'+y+'" x2="'+(x+i*w)+'" y2="'+(y+U)+'" stroke="'+C_LINE+'" stroke-width="0.7"/>';
+  } else { // 100
+    const c=U/10;
+    s+=rect(x,y,c,c,col,'none');
+    for(let i=1;i<10;i++){ s+='<line x1="'+(x+i*c)+'" y1="'+y+'" x2="'+(x+i*c)+'" y2="'+(y+U)+'" stroke="'+C_LINE+'" stroke-width="0.5"/>'; s+='<line x1="'+x+'" y1="'+(y+i*c)+'" x2="'+(x+U)+'" y2="'+(y+i*c)+'" stroke="'+C_LINE+'" stroke-width="0.5"/>'; }
+  }
+  s+=rect(x,y,U,U,'none',C_LINE,1.4);
+  return s;
+}
+// grupo de m unidades en rejilla cols×rows (cuadrados de lado U), color
+function unidadGrupo(x,y,U,cols,rows,col){
+  let s='';
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    s+=rect(x+c*U, y+r*U, U, U, col, '#fff', 1);
+  }
+  s+=rect(x,y,cols*U,rows*U,'none',C_W3,1.6);
+  return s;
+}
+
+function escenaDecDec(){
+  const U=46, top=26, base=top+U;
+  const M=44;
+  const xPart=M, xUnit=xPart+U+72, xGroup=xUnit+U+72;
+  const W=xGroup + 10*U + M, H=base+58;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:'+W+'px;max-width:'+W+'px">';
+  // décima
+  s+=unidadParte(xPart,top,U,10,C_F);
+  s+=mono(xPart+U/2, top-8, '0,1', 13, C_F3, '700');
+  s+=txt(xPart+U/2, base+20, 'una décima', 12.5, C_F, '700');
+  s+=txt(xPart+U/2, base+36, '(la unidad ÷10)', 11, C_SOFT, '400');
+  // unidad
+  s+=rect(xUnit,top,U,U,C_U,'#fff',1.4);
+  s+=mono(xUnit+U/2, top-8, '1', 13, 'var(--amber-deep)', '700');
+  s+=txt(xUnit+U/2, base+20, 'una unidad', 12.5, 'var(--amber-deep)', '700');
+  // decena
+  s+=unidadGrupo(xGroup,top,U,10,1,C_W);
+  s+=mono(xGroup+5*U, top-8, '10', 13, C_W3, '700');
+  s+=txt(xGroup+5*U, base+20, 'una decena', 12.5, C_W, '700');
+  s+=txt(xGroup+5*U, base+36, '(10 unidades)', 11, C_SOFT, '400');
+  // flechas ×10
+  s+=arrow(xPart+U+8, xUnit-8, top+U/2, '×10');
+  s+=arrow(xUnit+U+8, xGroup-8, top+U/2, '×10');
+  s+='</svg>';
+  return {svg:s, escala:'1 unidad = '+U+' px', factor:'Una <b>decena</b> (<span class="mk">10</span>) es <span class="mk">100</span> veces una <b>décima</b> (<span class="mk">0,1</span>). Fíjate en el dibujo: la décima es un trocito de la unidad; la decena son diez unidades enteras.'};
+}
+
+function escenaCenCen(){
+  const U=20, top=26;
+  const flatSide=10*U; // 200
+  const base=top+flatSide;
+  const xPart=48, xUnit=xPart+U+70, xGroup=xUnit+U+70;
+  const W=xGroup+flatSide+48, H=base+56;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:'+Math.min(W,560)+'px;max-width:'+W+'px">';
+  // alineadas por la base
+  const yPart=base-U, yUnit=base-U, yGroup=base-flatSide;
+  s+=unidadParte(xPart,yPart,U,100,C_F);
+  s+=mono(xPart+U/2, yPart-8, '0,01', 12, C_F3, '700');
+  s+=txt(xPart+U/2, base+20, 'una centésima', 12, C_F, '700');
+  s+=rect(xUnit,yUnit,U,U,C_U,'#fff',1.3);
+  s+=mono(xUnit+U/2, yUnit-8, '1', 12, 'var(--amber-deep)', '700');
+  s+=txt(xUnit+U/2, base+20, 'una unidad', 12, 'var(--amber-deep)', '700');
+  s+=unidadGrupo(xGroup,yGroup,U,10,10,C_W);
+  s+=mono(xGroup+flatSide/2, yGroup-8, '100', 12, C_W3, '700');
+  s+=txt(xGroup+flatSide/2, base+20, 'una centena', 12, C_W, '700');
+  s+=txt(xGroup+flatSide/2, base+36, '(100 unidades)', 11, C_SOFT, '400');
+  s+=arrow(xPart+U+6, xUnit-6, base-U/2, '×100');
+  s+=arrow(xUnit+U+6, xGroup-6, base-U/2, '×100');
+  s+='</svg>';
+  return {svg:s, escala:'1 unidad = '+U+' px', factor:'Una <b>centena</b> (<span class="mk">100</span>) es <span class="mk">10 000</span> veces una <b>centésima</b> (<span class="mk">0,01</span>). La centésima es una de las 100 casillas de la unidad; la centena son 100 unidades.'};
+}
+
+function escenaMilMil(){
+  const U=6, gap=10;
+  const flat=10*U; // 60
+  // millar = 10 placas (centenas) en 5×2
+  const cols=5, rows=2;
+  const millW=cols*flat+(cols-1)*gap, millH=rows*flat+(rows-1)*gap;
+  const top=30;
+  // a la izquierda el millar; a la derecha, la milésima AMPLIADA
+  const xMill=20;
+  const magU=160; // unidad ampliada para la milésima
+  const xMag=xMill+millW+80;
+  const W=xMag+magU+60, H=top+Math.max(millH,magU)+58;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:'+Math.min(W,560)+'px;max-width:'+W+'px">';
+  // millar: 10 placas
+  let placas='';
+  for(let r=0;r<rows;r++)for(let cc=0;cc<cols;cc++){
+    const px=xMill+cc*(flat+gap), py=top+r*(flat+gap);
+    for(let a=0;a<10;a++)for(let b=0;b<10;b++) placas+=rect(px+b*U,py+a*U,U,U,C_W,'#fff',0.4);
+    placas+=rect(px,py,flat,flat,'none',C_W3,1.2);
+  }
+  // resaltar dentro de la primera placa: 1 unidad (ámbar) y 1 decena (roja clara)
+  placas+=rect(xMill, top, U*10, U, 'var(--w1)', '#fff', 0.4); // una decena (fila)
+  placas+=rect(xMill, top, U, U, C_U, '#fff', 0.6);            // una unidad
+  s+=placas;
+  s+=mono(xMill+millW/2, top-10, '1000', 12, C_W3, '700');
+  s+=txt(xMill+millW/2, top+millH+20, 'un millar = 1000 unidades', 12, C_W, '700');
+  s+=txt(xMill+millW/2, top+millH+36, 'cada placa = 100 · cada fila = 10', 10.5, C_SOFT, '400');
+  // milésima ampliada
+  const yMag=top;
+  s+=unidadParte(xMag,yMag,magU,100,'none'); // rejilla 100 base
+  // subdividir cada centésima en 10 (tiras) ligeras
+  const cc2=magU/10;
+  for(let i=0;i<10;i++)for(let j=0;j<10;j++){ for(let k=1;k<10;k++){ const lx=xMag+i*cc2+k*(cc2/10); s+='<line x1="'+lx+'" y1="'+(yMag+j*cc2)+'" x2="'+lx+'" y2="'+(yMag+(j+1)*cc2)+'" stroke="'+C_LINE+'" stroke-width="0.25"/>'; } }
+  // una milésima coloreada (primera tira de la primera centésima)
+  s+=rect(xMag, yMag, cc2/10, cc2, C_F, 'none');
+  s+=rect(xMag,yMag,magU,magU,'none',C_LINE,1.4);
+  s+='<text x="'+(xMag+magU/2)+'" y="'+(yMag-10)+'" font-family="var(--font-mono)" font-size="12" font-weight="700" fill="'+C_F3+'" text-anchor="middle">0,001</text>';
+  s+=txt(xMag+magU/2, yMag+magU+20, 'una milésima (la unidad ÷1000)', 11.5, C_F, '700');
+  s+=txt(xMag+magU/2, yMag+magU+36, '🔍 ampliada', 10.5, C_SOFT, '400');
+  s+='</svg>';
+  return {svg:s, escala:'millar: 1 unidad = '+U+' px · milésima: ampliada', factor:'Un <b>millar</b> son <span class="mk">1000</span> unidades; una <b>milésima</b> es <span class="mk">0,001</span>. Entre las dos hay un factor de <span class="mk">1 000 000</span>: no caben en el mismo dibujo, por eso la milésima va ampliada.'};
+}
+
+const ESCENAS={1:escenaDecDec, 2:escenaCenCen, 3:escenaMilMil};
+let parActual=1;
+function renderEscena(){
+  const r=ESCENAS[parActual]();
+  document.getElementById('escena').innerHTML=r.svg+'<div class="escala-chip">📐 escala: '+r.escala+'</div>';
+  document.getElementById('factor').innerHTML='<span aria-hidden="true">📏</span><div>'+r.factor+'</div>';
+}
+document.querySelectorAll('#parSel button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#parSel button').forEach(x=>x.classList.remove('is-active'));
+    b.classList.add('is-active'); parActual=+b.dataset.par; renderEscena();
+  });
+});
+
+/* ====================================================================
+   TAB 2 · COLOCA LA CIFRA
+   ==================================================================== */
+function renderPV(){
+  const err=document.getElementById('pvError'); err.textContent='';
+  const p=parseNum(document.getElementById('pvInput').value);
+  if(p===null){ err.textContent='Escribe un número válido, por ejemplo 2407,5'; return; }
+  if(p.error==='maxent'){ err.textContent='La parte entera llega hasta los millares (máximo 9999).'; return; }
+  if(p.neg){ err.textContent='Usa un número positivo: aquí miramos el valor de cada cifra.'; return; }
+  const dg=digitsOf(p);
+  // chart
+  let html='';
+  ORD.forEach((o,i)=>{
+    const on=dg[o.key]>0;
+    html+='<div class="col anim-pop '+o.cls+(on?' on':'')+'" style="animation-delay:'+(i*45)+'ms">'
+      +'<span class="badge">'+o.abbr+'</span>'
+      +'<div class="cifra'+(on?'':' off')+'">'+dg[o.key]+'</div>'
+      +'<div class="nom">'+o.nomCorto+'</div>'
+      +'<div class="val">'+fmtValor(o.valor)+'</div></div>';
+    if(o.key==='U') html+='<div class="coma">,</div>';
+  });
+  document.getElementById('pvChart').innerHTML=html;
+  // lectura + aportes
+  let read='<span class="eyebrow">Se lee</span>';
+  read+='<div class="read-line"><span class="cifra">'+p.str+'</span> &nbsp;=&nbsp; '+lecturaCompleta(p)+'</div>';
+  let aps='';
+  ORD.forEach(o=>{ const d=dg[o.key]; if(d===0) return;
+    aps+='<span class="ap '+o.cls+'"><span class="d">'+d+'</span><span class="n">'+o.nom+'</span><span class="v">= '+fmtValor(round(d*o.valor))+'</span></span>';
+  });
+  if(aps==='') aps='<span class="ap u"><span class="d">0</span><span class="n">unidades</span></span>';
+  read+='<div class="aportes">'+aps+'</div>';
+  document.getElementById('pvRead').innerHTML=read;
+}
+document.getElementById('pvBtn').addEventListener('click',renderPV);
+document.getElementById('pvInput').addEventListener('keydown',e=>{ if(e.key==='Enter') renderPV(); });
+document.querySelectorAll('.chip[data-v]').forEach(ch=>{
+  ch.setAttribute('tabindex','0');
+  ch.addEventListener('click',()=>{ document.getElementById('pvInput').value=ch.dataset.v; renderPV(); });
+  ch.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();ch.click();} });
+});
+
+/* ====================================================================
+   TAB 4 · QUIZ
+   ==================================================================== */
+let qHits=0, qStreak=0, qCurrent=null;
+const qCard=document.getElementById('qCard');
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function confundibleDe(key){ return ({D:'d',d:'D',C:'c',c:'C',UM:'m',m:'UM'})[key]||null; }
+
+function genDigits(){
+  const dg={UM:0,C:0,D:0,U:0,d:0,c:0,m:0};
+  dg.U=randInt(0,9); dg.D=randInt(0,9); dg.C=randInt(0,9);
+  if(Math.random()<0.5) dg.UM=randInt(1,9);
+  if(Math.random()<0.3){ // entero puro, sin decimales
+    if(dg.UM+dg.C+dg.D+dg.U===0) dg.U=randInt(1,9);
+    return dg;
+  }
+  dg.d=randInt(0,9); if(Math.random()<0.6) dg.c=randInt(0,9); if(Math.random()<0.35) dg.m=randInt(1,9);
+  if(dg.d+dg.c+dg.m===0) dg.d=randInt(1,9);
+  return dg;
+}
+function hlNum(dg,key){
+  const ek=['UM','C','D','U'], dk=['d','c','m'];
+  let start=0; while(start<3 && dg[ek[start]]===0 && ek[start]!==key) start++;
+  let ent=ek.slice(start).map(k=> k===key?'<span class="hl">'+dg[k]+'</span>':dg[k]).join('');
+  let end=2; while(end>0 && dg[dk[end]]===0 && dk[end]!==key) end--;
+  const hayDec = !(dk.slice(0,end+1).every(k=>dg[k]===0)) || dk.includes(key);
+  let dec=dk.slice(0,end+1).map(k=> k===key?'<span class="hl">'+dg[k]+'</span>':dg[k]).join('');
+  return ent + (hayDec && dec!==''? ','+dec : '');
+}
+function newQuestion(){
+  const type=pick(['orden','valor','cifras','x10','comparar']);
+  qCard.innerHTML='';
+  if(type==='cifras'){
+    const o=pick(ORD.filter(x=>x.lado!=='u'));
+    const n=randInt(1,9);
+    const palabras = o.masc ? (n===1?'un':UNI[n]) : (n===1?'una':UNIf[n]);
+    const nombre = n===1?o.qs:o.qp;
+    qCurrent={type, target:round(n*o.valor), o, n, texto:palabras+' '+nombre};
+    qCard.innerHTML='<p class="qprompt">Escribe <b>con cifras</b>:</p>'
+      +'<div class="qnumber">'+qCurrent.texto+'</div>'
+      +'<div class="qhint">'+(o.lado==='w'?'es un grupo, número mayor':'es una parte, lleva coma')+'</div>'
+      +'<div class="qinput-row"><input class="num-input" id="qIn" inputmode="decimal" placeholder="0,00" aria-label="Tu respuesta"><button class="btn btn-primary" id="qCheck">Comprobar</button></div>'
+      +'<div class="feedback" id="qFb" aria-live="polite"></div><div class="qfoot" hidden id="qFootWrap"><button class="btn" id="qNext">Siguiente →</button></div>';
+    document.getElementById('qCheck').addEventListener('click',checkInput);
+    document.getElementById('qIn').addEventListener('keydown',e=>{if(e.key==='Enter')checkInput();});
+    document.getElementById('qIn').focus(); return;
+  }
+  if(type==='x10'){ qX10(); return; }
+  if(type==='comparar'){ qComparar(); return; }
+  const dg=genDigits();
+  const o=pick(ORD.filter(x=>dg[x.key]>0));
+  const numHtml=hlNum(dg,o.key);
+  if(type==='orden'){
+    const correct=o.nomCorto; const conf=confundibleDe(o.key);
+    let opts=new Set([correct]); if(conf) opts.add(ORD[IDX[conf]].nomCorto);
+    while(opts.size<4) opts.add(pick(ORD).nomCorto);
+    qCurrent={type, correct};
+    qCard.innerHTML='<p class="qprompt">¿Qué orden ocupa la cifra resaltada?</p>'
+      +'<div class="qnumber">'+numHtml+'</div>'
+      +'<div class="qhint">¿está a la izquierda (grupo) o a la derecha (parte) de las unidades?</div>'
+      +'<div class="options" id="qOpts"></div><div class="feedback" id="qFb" aria-live="polite"></div>'
+      +'<div class="qfoot" hidden id="qFootWrap"><button class="btn" id="qNext">Siguiente →</button></div>';
+    buildOptions(shuffle([...opts]).map(t=>({label:t, ok:t===correct})));
+  } else {
+    const correctVal=fmtValor(round(dg[o.key]*o.valor)); const conf=confundibleDe(o.key);
+    let opts=new Set([correctVal]);
+    if(conf){ opts.add(fmtValor(round(dg[o.key]*ORD[IDX[conf]].valor))); }
+    [o.valor*10,o.valor/10].forEach(v=>{ if(v>=0.001&&v<=9000) opts.add(fmtValor(round(dg[o.key]*v))); });
+    while(opts.size<4) opts.add(fmtValor(round(dg[o.key]*pick([1,10,100,1000,0.1,0.01,0.001]))));
+    qCurrent={type, correct:correctVal};
+    qCard.innerHTML='<p class="qprompt">¿Cuánto <b>vale</b> la cifra resaltada en el número?</p>'
+      +'<div class="qnumber">'+numHtml+'</div>'
+      +'<div class="qhint">no es la cifra: es lo que aporta según su columna.</div>'
+      +'<div class="options" id="qOpts"></div><div class="feedback" id="qFb" aria-live="polite"></div>'
+      +'<div class="qfoot" hidden id="qFootWrap"><button class="btn" id="qNext">Siguiente →</button></div>';
+    buildOptions(shuffle([...opts].slice(0,4)).map(t=>({label:t, ok:t===correctVal, mono:true})));
+  }
+}
+/* valores en milésimas para evitar errores de coma flotante */
+function milliFmt(mv){
+  const ent=Math.floor(mv/1000);
+  const dec=String(mv%1000).padStart(3,'0').replace(/0+$/,'');
+  return ent+(dec?','+dec:'');
+}
+function qX10(){
+  const op=pick(['×10','÷10']);
+  const mv=randInt(1,9999)*pick([10,100]); // múltiplo de 10, cabe siempre
+  const corr= op==='×10' ? mv*10 : mv/10;
+  const opts=new Set([milliFmt(corr)]);
+  const pool=[op==='×10'?mv/10:mv*10, mv, op==='×10'?mv*100:mv/100, mv*2, mv*5];
+  for(const v of pool){ if(opts.size>=4) break;
+    if(Number.isInteger(v)&&v>=1&&v<=9999999) opts.add(milliFmt(v)); }
+  qCurrent={type:'x10', correct:milliFmt(corr),
+    explOk: op==='×10' ? 'Cada cifra saltó un sitio a la izquierda: vale diez veces más.'
+                       : 'Cada cifra saltó un sitio a la derecha: vale diez veces menos.',
+    expl: 'Las cifras no cambian, solo se mueven un sitio '+(op==='×10'?'a la izquierda.':'a la derecha.')};
+  qCard.innerHTML='<p class="qprompt">Sin calcular: ¿cuánto es?</p>'
+    +'<div class="qnumber">'+milliFmt(mv)+' <span class="hl">'+op+'</span></div>'
+    +'<div class="qhint">×10: las cifras saltan a la izquierda · ÷10: a la derecha</div>'
+    +'<div class="options" id="qOpts"></div><div class="feedback" id="qFb" aria-live="polite"></div>'
+    +'<div class="qfoot" hidden id="qFootWrap"><button class="btn" id="qNext">Siguiente →</button></div>';
+  buildOptions(shuffle([...opts].slice(0,4)).map(t=>({label:t, ok:t===qCurrent.correct, mono:true})));
+}
+function padDec(s,L){
+  let [e,d='']=s.split(',');
+  while(d.length<L) d+='0';
+  return e+(d?','+d:'');
+}
+function qComparar(){
+  const pat=pick([1,1,2,3,3]);
+  let aM,bM,aS,bS;
+  if(pat===1){ const d=randInt(3,9), e=randInt(0,9);
+    aM=d*100; aS='0,'+d; bM=(d-1)*100+e*10; bS='0,'+(d-1)+e; }
+  else if(pat===2){ const d=randInt(1,9);
+    aM=d*100; aS='0,'+d; bM=d*100; bS='0,'+d+'0'; }
+  else { const u=randInt(1,9), d=randInt(1,9), e=randInt(0,9);
+    aM=u*1000+d*100; aS=u+','+d; bM=u*1000+(d-1)*100+e*10; bS=u+','+(d-1)+e; }
+  if(Math.random()<0.5){ [aM,bM]=[bM,aM]; [aS,bS]=[bS,aS]; }
+  const correct = aM>bM ? aS : (bM>aM ? bS : 'Son iguales');
+  const L=Math.max((aS.split(',')[1]||'').length,(bS.split(',')[1]||'').length);
+  const expl='Iguala los decimales añadiendo ceros: '+aS+' = '+padDec(aS,L)+' y '+bS+' = '+padDec(bS,L)+'. Añadir ceros a la derecha no cambia el valor.';
+  qCurrent={type:'comparar', correct, expl, explOk:'Más cifras decimales no significa un número mayor.'};
+  qCard.innerHTML='<p class="qprompt">¿Cuál es <b>mayor</b>?</p>'
+    +'<div class="qnumber">'+aS+' <span style="color:var(--ink-faint)">·</span> '+bS+'</div>'
+    +'<div class="qhint">cuidado: tener más cifras decimales no es ser más grande</div>'
+    +'<div class="options" id="qOpts"></div><div class="feedback" id="qFb" aria-live="polite"></div>'
+    +'<div class="qfoot" hidden id="qFootWrap"><button class="btn" id="qNext">Siguiente →</button></div>';
+  const opts=shuffle([aS,bS]).map(t=>({label:t, ok:t===correct, mono:true}));
+  opts.push({label:'Son iguales', ok:correct==='Son iguales'});
+  buildOptions(opts);
+}
+function buildOptions(list){
+  const box=document.getElementById('qOpts'); box.innerHTML='';
+  list.forEach(it=>{
+    const b=document.createElement('button'); b.className='opt'; b.type='button';
+    b.innerHTML = it.mono? '<span style="font-family:var(--font-mono);font-weight:700">'+it.label+'</span>' : it.label;
+    b.addEventListener('click',()=>chooseOption(b,it.ok));
+    box.appendChild(b);
+  });
+}
+function chooseOption(btn,ok){
+  const box=document.getElementById('qOpts'); [...box.children].forEach(c=>c.disabled=true);
+  const fb=document.getElementById('qFb');
+  if(ok){ btn.classList.add('correct'); qHits++; qStreak++; fb.className='feedback good show'; fb.innerHTML='<b>¡Correcto!</b> '+(qCurrent.explOk||'Esa columna manda sobre el valor.'); }
+  else{ btn.classList.add('wrong'); qStreak=0;
+    [...box.children].forEach(c=>{ if(c.textContent.trim()===String(qCurrent.correct)) c.classList.add('correct'); });
+    fb.className='feedback bad show'; fb.innerHTML='<b>Casi.</b> Es <span style="font-family:var(--font-mono);font-weight:700">'+qCurrent.correct+'</span>. '+(qCurrent.expl||'Recuerda: cada paso vale diez veces.'); }
+  updateScore(); revealNext();
+}
+function checkInput(){
+  const p=parseNum(document.getElementById('qIn').value); const fb=document.getElementById('qFb');
+  let val=null; if(p&&!p.error){ val=parseInt(p.ent,10)+(p.dec?parseInt(p.dec.padEnd(3,'0'),10)/1000:0); val=round(val*(p.neg?-1:1)); }
+  if(val!==null && Math.abs(val-qCurrent.target)<1e-9){ qHits++; qStreak++; fb.className='feedback good show'; fb.innerHTML='<b>¡Exacto!</b>'; }
+  else{ qStreak=0; fb.className='feedback bad show'; fb.innerHTML='<b>No es eso.</b> '+qCurrent.texto+' se escribe <span style="font-family:var(--font-mono);font-weight:700">'+fmtValor(qCurrent.target)+'</span>.'; }
+  document.getElementById('qCheck').disabled=true; document.getElementById('qIn').disabled=true;
+  updateScore(); revealNext();
+}
+function revealNext(){ const w=document.getElementById('qFootWrap'); w.hidden=false; const n=document.getElementById('qNext'); n.addEventListener('click',newQuestion); n.focus(); }
+function updateScore(){ document.getElementById('qHits').textContent=qHits; document.getElementById('qStreak').textContent=qStreak; }
+
+/* ====================================================================
+   TAB 3 · LA MÁQUINA DEL ×10
+   ==================================================================== */
+const MAQ_K=['UM','C','D','U','d','c','m'];
+let maqDg=null;
+function maqStr(dg){
+  let ent=(''+dg.UM+dg.C+dg.D+dg.U).replace(/^0+(?=\d)/,'');
+  let dec=(''+dg.d+dg.c+dg.m).replace(/0+$/,'');
+  return ent+(dec?','+dec:'');
+}
+function maqRender(dir){
+  const chart=document.getElementById('maqChart');
+  chart.className='pv'+(dir==='izq'?' mov-izq':dir==='der'?' mov-der':'');
+  let h='';
+  ORD.forEach((o,i)=>{
+    const dv=maqDg[o.key], on=dv>0;
+    h+='<div class="col '+o.cls+(on?' on':'')+'">'
+      +'<span class="badge">'+o.abbr+'</span>'
+      +'<div class="cifra'+(on?'':' off')+'" style="animation-delay:'+(i*30)+'ms">'+dv+'</div>'
+      +'<div class="nom">'+o.nomCorto+'</div>'
+      +'<div class="val">'+fmtValor(o.valor)+'</div></div>';
+    if(o.key==='U') h+='<div class="coma">,</div>';
+  });
+  chart.innerHTML=h;
+}
+function maqLoad(){
+  const err=document.getElementById('maqError'); err.textContent='';
+  const p=parseNum(document.getElementById('maqInput').value);
+  if(p===null){ err.textContent='Escribe un número válido, por ejemplo 24,7'; return; }
+  if(p.error==='maxent'){ err.textContent='La parte entera llega hasta los millares (máximo 9999).'; return; }
+  if(p.neg){ err.textContent='Usa un número positivo.'; return; }
+  maqDg=digitsOf(p);
+  maqRender(null);
+  document.getElementById('maqOp').innerHTML='Número cargado: <span class="mk">'+maqStr(maqDg)+'</span>. Ahora prueba ×10 o ÷10.';
+}
+function maqShift(dir){
+  if(!maqDg){ maqLoad(); if(!maqDg) return; }
+  const err=document.getElementById('maqError'); err.textContent='';
+  const antes=maqStr(maqDg);
+  const nd={};
+  if(dir==='izq'){
+    if(maqDg.UM>0){ err.textContent='No cabe: pasaría de 9999. Carga un número más pequeño.'; return; }
+    for(let i=0;i<6;i++) nd[MAQ_K[i]]=maqDg[MAQ_K[i+1]];
+    nd.m=0;
+  } else {
+    if(maqDg.m>0){ err.textContent='No cabe: pasaría de las milésimas. Carga otro número.'; return; }
+    for(let i=6;i>0;i--) nd[MAQ_K[i]]=maqDg[MAQ_K[i-1]];
+    nd.UM=0;
+  }
+  maqDg=nd;
+  maqRender(dir);
+  const despues=maqStr(maqDg);
+  const op=dir==='izq'?'×10':'÷10';
+  const frase=dir==='izq'
+    ?'cada cifra ha saltado un sitio a la <b>izquierda</b> y ahora vale <b>diez veces más</b>.'
+    :'cada cifra ha saltado un sitio a la <b>derecha</b> y ahora vale <b>diez veces menos</b>.';
+  document.getElementById('maqOp').innerHTML='<span class="mk">'+antes+'</span> '+op+' = <span class="mk">'+despues+'</span> — '+frase;
+}
+document.getElementById('maqLoad').addEventListener('click',maqLoad);
+document.getElementById('maqInput').addEventListener('keydown',e=>{ if(e.key==='Enter') maqLoad(); });
+document.getElementById('maqPor10').addEventListener('click',()=>maqShift('izq'));
+document.getElementById('maqDiv10').addEventListener('click',()=>maqShift('der'));
+document.querySelectorAll('.maq-chip').forEach(ch=>{
+  ch.setAttribute('tabindex','0');
+  ch.addEventListener('click',()=>{ document.getElementById('maqInput').value=ch.dataset.v; maqLoad(); });
+  ch.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();ch.click();} });
+});
+
+/* ====================================================================
+   NAVEGACIÓN
+   ==================================================================== */
+let quizStarted=false;
+document.getElementById('tabNav').addEventListener('click',e=>{
+  const btn=e.target.closest('.tab-btn'); if(!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b=>{ b.classList.remove('is-active'); b.setAttribute('aria-selected','false'); });
+  btn.classList.add('is-active'); btn.setAttribute('aria-selected','true');
+  const t=btn.dataset.tab;
+  for(let i=1;i<=5;i++) document.getElementById('panel-'+i).hidden=(String(i)!==t);
+  if(t==='5' && !quizStarted){ quizStarted=true; newQuestion(); }
+});
+
+/* arranque */
+renderEscena();
+renderPV();
+maqLoad();
+</script>
+</body>
+</html>

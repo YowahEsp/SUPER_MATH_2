@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mínimo común múltiplo · explicación visual</title>
+<style>
+  :root{
+    --ink:#1F2A3D;
+    --paper:#EEF2F6;
+    --card:#FFFFFF;
+    --main:#1F4E79;
+    --a:#2E75B6;       --a-soft:#E1ECF7;
+    --b:#2F8F5B;       --b-soft:#E0F0E7;
+    --c:#7A4FB0;       --c-soft:#ECE3F6;
+    --min:#E08A1E;     --min-soft:#FBEBD2; --min-deep:#B36408;
+    --line:#D8E0E8;
+    --muted:#5C6B7F;
+    --shadow:0 1px 2px rgba(31,42,61,.06), 0 8px 24px rgba(31,42,61,.07);
+    --r:16px;
+    --num:'Palatino Linotype','URW Palladio L','Book Antiqua',Palatino,Georgia,serif;
+    --body:'Helvetica Neue',Helvetica,Arial,system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html,body{margin:0}
+  body{
+    font-family:var(--body); color:var(--ink);
+    background:radial-gradient(1200px 500px at 50% -200px, #F7FAFD 0%, var(--paper) 60%) fixed;
+    line-height:1.55; -webkit-text-size-adjust:100%; padding:0 16px 64px;
+  }
+  .wrap{max-width:880px;margin:0 auto}
+
+  header{padding:28px 0 8px;text-align:center}
+  .eyebrow{font-family:var(--num);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--main);opacity:.85;margin:0 0 6px}
+  h1{font-family:var(--num);font-weight:700;font-size:clamp(26px,6vw,40px);line-height:1.1;
+    margin:0;color:var(--ink);letter-spacing:-.01em}
+  .lede{color:var(--muted);font-size:15.5px;margin:10px auto 0;max-width:560px}
+
+  .result{
+    margin:22px auto 4px;max-width:560px;
+    background:linear-gradient(180deg,#fff,#FAFCFE);border:1px solid var(--line);
+    border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;
+    display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;
+    font-family:var(--num);font-weight:600;font-size:clamp(20px,5vw,28px);
+  }
+  .result .lab{color:var(--main)} .result .eq{color:var(--muted);font-weight:500}
+  .result .pa{color:var(--a)} .result .pb{color:var(--b)} .result .pc{color:var(--c)}
+  .result .val{color:#fff;background:var(--min);min-width:1.7em;padding:.06em .42em;
+    border-radius:12px;box-shadow:0 4px 12px rgba(224,138,30,.35);display:inline-block;
+    text-align:center;transition:transform .25s ease}
+  .result .val.bump{transform:scale(1.16)}
+
+  .pair{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center;margin:18px 0 6px}
+  .stepper{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:10px 12px;display:flex;align-items:center;gap:8px;position:relative}
+  .stepper .tag{font-family:var(--num);font-weight:600;font-size:13px;letter-spacing:.04em;width:74px}
+  .stepper.A .tag{color:var(--a)} .stepper.B .tag{color:var(--b)} .stepper.C .tag{color:var(--c)}
+  .stepper button.pm{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);
+    background:#fff;font-size:20px;line-height:1;cursor:pointer;color:var(--ink);font-family:var(--num);
+    transition:background .15s,transform .05s}
+  .stepper button.pm:hover{background:var(--paper)} .stepper button.pm:active{transform:scale(.92)}
+  .stepper input{width:54px;text-align:center;border:none;background:transparent;font-family:var(--num);
+    font-weight:700;font-size:22px;color:var(--ink);-moz-appearance:textfield}
+  .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .stepper.A input{color:var(--a)} .stepper.B input{color:var(--b)} .stepper.C input{color:var(--c)}
+  .stepper .rm{position:absolute;top:-9px;right:-9px;width:24px;height:24px;border-radius:50%;
+    border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;font-size:14px;
+    line-height:1;box-shadow:var(--shadow)}
+  .stepper .rm:hover{color:var(--c);border-color:var(--c)}
+  .addc{border:1px solid var(--line);background:#fff;color:var(--muted);font-family:var(--body);
+    font-weight:600;font-size:13px;border-radius:12px;padding:11px 13px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;transition:border-color .15s,color .15s}
+  .addc .plus{font-family:var(--num);font-size:17px;line-height:1;color:var(--c)}
+  .addc:hover{border-color:var(--c);color:var(--c)}
+
+  .tabs{display:flex;gap:6px;margin:22px 0 0;background:#fff;border:1px solid var(--line);
+    border-radius:14px;padding:6px;box-shadow:var(--shadow);overflow-x:auto}
+  .tab{flex:1 1 auto;white-space:nowrap;border:none;background:transparent;cursor:pointer;padding:11px 12px;
+    border-radius:10px;font-family:var(--body);font-weight:600;font-size:14px;color:var(--muted);transition:background .15s,color .15s}
+  .tab .n{font-family:var(--num);opacity:.6;margin-right:7px}
+  .tab[aria-selected="true"]{background:var(--main);color:#fff}
+  .tab[aria-selected="true"] .n{opacity:.85}
+  .tab:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow);padding:22px 20px;margin-top:14px}
+  .panel[hidden]{display:none}
+  .panel h2{font-family:var(--num);font-weight:600;font-size:19px;margin:0 0 4px;color:var(--main)}
+  .panel .intro{color:var(--muted);font-size:14.5px;margin:0 0 16px}
+
+  /* chips — Tab 1 */
+  .divrow{margin:0 0 14px}
+  .divrow .who{font-family:var(--num);font-weight:600;font-size:14px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+  .swatch{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-family:var(--num);font-weight:600;font-size:16px;min-width:38px;padding:7px 10px;border-radius:10px;
+    text-align:center;border:1.5px solid transparent;background:var(--paper);color:var(--muted);cursor:default;
+    transition:transform .12s;position:relative}
+  .chip.own-a{background:var(--a-soft);color:var(--a)}
+  .chip.own-b{background:var(--b-soft);color:var(--b)}
+  .chip.own-c{background:var(--c-soft);color:var(--c)}
+  .chip.common{border-color:var(--min);color:var(--min-deep);cursor:pointer}
+  .chip.common:hover{transform:translateY(-2px)}
+  .chip.max{background:var(--min);color:#fff;border-color:var(--min)}
+  .chip.max::after{content:"mín";position:absolute;top:-9px;right:-6px;font-size:9px;font-weight:700;
+    background:var(--min-deep);color:#fff;padding:1px 5px;border-radius:6px;letter-spacing:.05em}
+  .legend{font-size:13px;color:var(--muted);margin-top:6px;display:flex;gap:16px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .ring{width:14px;height:14px;border-radius:5px;border:1.5px solid var(--min);display:inline-block}
+  .explain{margin-top:14px;padding:13px 15px;border-radius:12px;background:var(--min-soft);
+    border:1px solid #F0D6A8;font-size:15px;min-height:1px}
+  .explain b{font-family:var(--num)}
+  .explain.empty{background:var(--paper);border-color:var(--line);color:var(--muted)}
+
+  /* encounter — Tab 2 */
+  #encSvg text{font-family:var(--num)}
+  .enc-pick-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .enc-lbl{font-weight:600;font-size:14px}
+  .pick{display:flex;gap:6px;flex-wrap:wrap}
+  .pick button{font-family:var(--num);font-weight:600;font-size:15px;border:1.5px solid var(--line);background:#fff;
+    border-radius:9px;min-width:36px;padding:6px 9px;cursor:pointer;color:var(--ink);transition:all .12s}
+  .pick button:hover{border-color:var(--main)}
+  .pick button.on{background:var(--main);color:#fff;border-color:var(--main)}
+  .pick button.okmax{border-color:var(--min);color:var(--min-deep)}
+  .pick button.on.okmax{background:var(--min);color:#fff;border-color:var(--min)}
+  .verdict{font-size:15px;margin:14px 0;font-weight:500}
+  .verdict.ok{color:var(--b)} .verdict.no{color:var(--min-deep)}
+  .enc-details{display:flex;flex-direction:column;gap:8px}
+  .enc-row{display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:10px;background:var(--paper);
+    font-size:14.5px;flex-wrap:wrap}
+  .enc-who{font-family:var(--num);font-weight:600;min-width:120px}
+  .enc-ok{color:var(--b);font-weight:600} .enc-no{color:var(--min-deep);font-weight:600}
+
+  /* tira — Tab 3 */
+  .tirawrap{margin:0 0 4px}
+  .tirafila{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+  .tiralabel{font-family:var(--num);font-weight:600;font-size:13px;min-width:56px;text-align:right}
+  .tiraseg-wrap{position:relative;height:36px;border-radius:8px;overflow:hidden;background:var(--paper)}
+  .slider-row{display:flex;align-items:center;gap:12px;max-width:440px;margin-top:8px}
+  .slider-row input[type=range]{flex:1;accent-color:var(--main)}
+  .sval{font-family:var(--num);font-weight:700;font-size:20px;min-width:36px;text-align:center}
+  .tileverdict{font-size:15px;font-weight:500;min-height:1.5em;margin-top:8px}
+  .tileverdict.ok{color:var(--b)} .tileverdict.best{color:var(--min-deep)} .tileverdict.no{color:var(--muted)}
+
+  /* method — Tab 4 */
+  .method{display:flex;flex-direction:column;gap:14px}
+  .facline{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;font-family:var(--num);font-size:18px}
+  .facline .who{font-weight:600;font-size:14px;min-width:86px}
+  .facline.A .who{color:var(--a)} .facline.B .who{color:var(--b)} .facline.C .who{color:var(--c)}
+  .fac{padding:4px 9px;border-radius:9px;background:var(--paper);font-weight:600}
+  .fac.hit{background:var(--min-soft);color:var(--min-deep);outline:1.5px solid var(--min)}
+  .fac.dim{color:var(--muted);opacity:.5}
+  .fac sup{font-size:.7em} .times{color:var(--muted)}
+  .build{margin-top:4px;padding:14px 16px;border-radius:12px;background:#fff;border:1px solid var(--line);
+    font-family:var(--num);font-size:19px;font-weight:600}
+  .build .res{color:#fff;background:var(--min);padding:.05em .4em;border-radius:9px;margin-left:4px}
+  .note{font-size:13.5px;color:var(--muted);font-family:var(--body)}
+
+  .bnote{max-width:560px;margin:8px auto 0;font-size:13.5px;color:var(--muted);
+    background:#fff;border:1px dashed var(--line);border-radius:10px;padding:7px 12px}
+  .bnote:empty{display:none}
+  .bnote b{color:var(--min-deep);font-family:var(--num)}
+
+  .chip.common:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+
+  @keyframes mcmGlow{0%,100%{opacity:1}50%{opacity:.45}}
+  .glow{animation:mcmGlow 1.8s ease-in-out infinite}
+
+  .fac.link{outline:1.5px dashed var(--main);outline-offset:1px}
+
+  .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;
+    font-family:var(--num);font-weight:600;line-height:1.15;margin:0 2px}
+  .frac .top{padding:0 5px;border-bottom:1.6px solid currentColor}
+  .usecase{margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--a-soft);
+    border:1px solid #C6DCF1;font-size:16px}
+  .usecase h3,.prop h3{font-family:var(--num);font-size:15px;margin:0 0 8px;color:var(--main)}
+  .usecase .fx{font-size:19px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--num)}
+  .prop{margin-top:12px;padding:13px 16px;border-radius:12px;background:var(--paper);
+    border:1px solid var(--line);font-size:15px}
+  .prop:empty{display:none}
+  .prop .fx{font-family:var(--num);font-size:17px;font-weight:600}
+
+  /* practica — Tab 5 */
+  .prx-q{font-family:var(--num);font-weight:700;font-size:clamp(22px,5vw,30px);margin:6px 0 14px}
+  .prx-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .prx-row input{width:96px;font-family:var(--num);font-weight:700;font-size:22px;text-align:center;
+    border:1.5px solid var(--line);border-radius:12px;padding:8px;color:var(--ink);background:#fff}
+  .prx-row input:focus-visible{outline:3px solid var(--a);outline-offset:1px}
+  .btn{border:none;border-radius:12px;padding:11px 16px;font-family:var(--body);font-weight:600;
+    font-size:14.5px;cursor:pointer;transition:transform .05s}
+  .btn:active{transform:scale(.96)}
+  .btn.pri{background:var(--main);color:#fff}
+  .btn.sec{background:#fff;color:var(--main);border:1.5px solid var(--line)}
+  .btn.sec:hover{border-color:var(--main)}
+  .prx-fb{margin-top:14px;padding:13px 15px;border-radius:12px;font-size:15px;min-height:1px}
+  .prx-fb.ok{background:var(--b-soft);border:1px solid #BFE0CC;color:var(--b)}
+  .prx-fb.no{background:var(--min-soft);border:1px solid #F0D6A8;color:var(--min-deep)}
+  .prx-fb.neutral{background:var(--paper);border:1px solid var(--line);color:var(--muted)}
+  .prx-sol{margin-top:12px}
+  .prx-score{font-family:var(--num);font-weight:600;font-size:14px;color:var(--muted);margin-left:auto}
+
+  .foot{text-align:center;color:var(--muted);font-size:12.5px;margin-top:26px}
+  @media (max-width:520px){.panel{padding:18px 14px}.tab{font-size:13px;padding:10px 8px}.tab .n{margin-right:4px}}
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Matemáticas · divisibilidad</p>
+    <h1>Mínimo común múltiplo</h1>
+    <p class="lede">El número más pequeño que es <b>múltiplo de todos a la vez</b>, sin excepción. Cambia los números y míralo de cuatro formas distintas.</p>
+
+    <div class="result" id="banner" aria-live="polite"></div>
+    <p class="bnote" id="bannerNote"></p>
+
+    <div class="pair" id="pair">
+      <div class="stepper A">
+        <span class="tag">Número A</span>
+        <button class="pm" data-d="-1" data-i="0" aria-label="Bajar A">−</button>
+        <input id="in0" type="number" inputmode="numeric" value="12" min="2" max="60" aria-label="Número A">
+        <button class="pm" data-d="1" data-i="0" aria-label="Subir A">+</button>
+      </div>
+      <div class="stepper B">
+        <span class="tag">Número B</span>
+        <button class="pm" data-d="-1" data-i="1" aria-label="Bajar B">−</button>
+        <input id="in1" type="number" inputmode="numeric" value="18" min="2" max="60" aria-label="Número B">
+        <button class="pm" data-d="1" data-i="1" aria-label="Subir B">+</button>
+      </div>
+      <div class="stepper C" id="stepperC" hidden>
+        <span class="tag">Número C</span>
+        <button class="pm" data-d="-1" data-i="2" aria-label="Bajar C">−</button>
+        <input id="in2" type="number" inputmode="numeric" value="9" min="2" max="60" aria-label="Número C">
+        <button class="pm" data-d="1" data-i="2" aria-label="Subir C">+</button>
+        <button class="rm" id="rmC" aria-label="Quitar el tercer número">×</button>
+      </div>
+      <button class="addc" id="addC"><span class="plus">+</span> tercer número</button>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Formas de verlo">
+    <button class="tab" role="tab" aria-selected="true"  id="tab0" aria-controls="p0"><span class="n">1</span>Múltiplos comunes</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab1" aria-controls="p1"><span class="n">2</span>El encuentro</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab2" aria-controls="p2"><span class="n">3</span>La tira</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab3" aria-controls="p3"><span class="n">4</span>El método</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab4" aria-controls="p4"><span class="n">5</span>Practica</button>
+  </div>
+
+  <!-- TAB 1 -->
+  <section class="panel" id="p0" role="tabpanel" aria-labelledby="tab0">
+    <h2>Los múltiplos que comparten</h2>
+    <p class="intro" id="multIntro"></p>
+    <div id="multHost"></div>
+    <div class="legend">
+      <span><span class="ring"></span> recuadro ámbar = múltiplo común a todos</span>
+      <span><span class="swatch" style="background:var(--min)"></span> relleno = el mínimo (m.c.m.)</span>
+    </div>
+    <div class="explain empty" id="multExplain">Pasa el ratón o pulsa un múltiplo común para ver qué relación tiene con cada número.</div>
+  </section>
+
+  <!-- TAB 2 -->
+  <section class="panel" id="p1" role="tabpanel" aria-labelledby="tab1" hidden>
+    <h2>¿Cuándo se encuentran?</h2>
+    <p class="intro" id="encIntro"></p>
+    <div id="encSvg" style="overflow-x:auto;margin:0 0 18px"></div>
+    <div class="enc-pick-row">
+      <span class="enc-lbl">Probar el minuto</span>
+      <div class="pick" id="encPick"></div>
+    </div>
+    <p class="verdict" id="encVerdict"></p>
+    <div class="enc-details" id="encDetails"></div>
+  </section>
+
+  <!-- TAB 3 -->
+  <section class="panel" id="p2" role="tabpanel" aria-labelledby="tab2" hidden>
+    <h2>La tira más corta</h2>
+    <p class="intro" id="tiraIntro"></p>
+    <div class="tirawrap" id="tirawrap"></div>
+    <div class="slider-row">
+      <span style="font-weight:600;font-size:14px">Longitud</span>
+      <input type="range" id="tiraRange" min="1" value="36" aria-label="Longitud de la tira">
+      <span class="sval" id="tiraVal">36</span>
+    </div>
+    <p class="tileverdict" id="tiraVerdict"></p>
+  </section>
+
+  <!-- TAB 4 -->
+  <section class="panel" id="p3" role="tabpanel" aria-labelledby="tab3" hidden>
+    <h2>El método: factores primos</h2>
+    <p class="intro">Para números grandes se descompone cada número en <b>factores primos</b> y se toman <b>todos</b> los que aparecen —comunes y exclusivos— con el <b>mayor exponente</b>. A diferencia del m.c.d., aquí el exponente es el máximo.</p>
+    <div class="method">
+      <div id="methodHost"></div>
+      <div class="build" id="mBuild"></div>
+      <p class="note">En <b>ámbar</b> queda escogido, de cada primo, el de <b>mayor exponente</b> (los demás se atenúan). Multiplicando los escogidos sale el m.c.m. Pasa el ratón por un factor para localizar ese primo en las demás descomposiciones.</p>
+      <div class="prop" id="mProp"></div>
+      <div class="usecase" id="mUso"></div>
+    </div>
+  </section>
+
+  <!-- TAB 5 -->
+  <section class="panel" id="p4" role="tabpanel" aria-labelledby="tab4" hidden>
+    <h2>Ahora tú</h2>
+    <p class="intro">Calcula el m.c.m. sin ayuda. Si fallas, recibirás una pista; al segundo fallo verás la solución completa por factores primos.</p>
+    <p class="prx-q" id="prxQ"></p>
+    <div class="prx-row">
+      <input id="prxIn" type="number" inputmode="numeric" min="1" aria-label="Tu respuesta" placeholder="?">
+      <button class="btn pri" id="prxCheck">Comprobar</button>
+      <button class="btn sec" id="prxNew">Nuevo ejercicio</button>
+      <button class="btn sec" id="prxSol">Ver solución</button>
+      <span class="prx-score" id="prxScore"></span>
+    </div>
+    <div class="prx-fb neutral" id="prxFb">Escribe tu respuesta y pulsa «Comprobar».</div>
+    <div class="prx-sol" id="prxSolBox"></div>
+  </section>
+
+  <p class="foot">CEPA · educación de personas adultas — herramienta de aula</p>
+</div>
+
+<script>
+"use strict";
+const KEY=['a','b','c'], NAME=['A','B','C'], COLORVAR=['--a','--b','--c'];
+const state={ nums:[12,18], meet:36, tira:36 };
+
+const $=s=>document.querySelector(s);
+const el=(t,c,txt)=>{const e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e;};
+
+function mcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a;}
+function mcm(a,b){return Math.round((a/mcd(a,b))*b);}
+function mcmAll(ns){return ns.reduce((l,n)=>mcm(l,n));}
+function factorizar(n){const f=[];let d=2;while(d*d<=n){let e=0;while(n%d===0){e++;n/=d;}if(e)f.push([d,e]);d++;}if(n>1)f.push([n,1]);return f;}
+function clamp(v){v=parseInt(v,10);if(isNaN(v))v=2;return Math.max(2,Math.min(60,v));}
+
+/* ---------- master ---------- */
+function setNum(i,val){state.nums[i]=clamp(val);afterChange();}
+function afterChange(){
+  state.nums.forEach((n,i)=>{const inp=$('#in'+i);if(inp)inp.value=n;});
+  const g=mcmAll(state.nums);
+  state.meet=g; state.tira=g;
+  updateBanner(g);
+  renderAll();
+}
+function updateBanner(g){
+  const parts=state.nums.map((n,i)=>`<span class="p${KEY[i]}">${n}</span>`).join('<span class="eq">,</span>');
+  $('#banner').innerHTML=`<span class="lab">m.c.m.</span><span class="eq">(</span>${parts}<span class="eq">) =</span><span class="val" id="rVal">${g}</span>`;
+  const val=$('#rVal');val.classList.remove('bump');void val.offsetWidth;val.classList.add('bump');
+  $('#bannerNote').innerHTML=specialNote(state.nums,g);
+}
+function specialNote(ns,g){
+  const mx=Math.max(...ns);
+  if(g===mx) return `<b>${mx}</b> ya es múltiplo ${ns.length===2?'del otro número':'de los demás números'}: el m.c.m. es él mismo.`;
+  if(ns.length===2 && mcd(ns[0],ns[1])===1)
+    return `${ns[0]} y ${ns[1]} son <b>coprimos</b> (no comparten factores primos): el m.c.m. es su producto, ${ns[0]} × ${ns[1]} = <b>${g}</b>.`;
+  return '';
+}
+function addThird(){if(state.nums.length===3)return;state.nums.push(clamp($('#in2').value||9));
+  $('#stepperC').hidden=false;$('#addC').hidden=true;afterChange();}
+function removeThird(){if(state.nums.length!==3)return;state.nums.pop();
+  $('#stepperC').hidden=true;$('#addC').hidden=false;afterChange();}
+function renderAll(){renderMultiplos();renderEncuentro();renderTira();renderMetodo();}
+
+/* ---------- 1 · múltiplos ---------- */
+function renderMultiplos(){
+  const ns=state.nums, g=mcmAll(ns);
+  const b=ns[ns.length-1];
+  $('#multIntro').innerHTML=`Un <b>múltiplo</b> es el resultado de multiplicar un número por 1, 2, 3…: `+
+    `${b}, ${2*b}, ${3*b}… son múltiplos de ${b}. Buscamos los que son múltiplos de <b>todos a la vez</b>; `+
+    `el menor de ellos es el m.c.m. Pulsa un múltiplo común para verlo.`;
+  const host=$('#multHost');host.innerHTML='';
+
+  ns.forEach((n,idx)=>{
+    const row=el('div','divrow');
+    const who=el('p','who');
+    who.innerHTML=`<span class="swatch" style="background:var(${COLORVAR[idx]})"></span> Múltiplos de ${n}`;
+    const chips=el('div','chips');
+
+    const shown=new Set();
+    let count=0;
+    // Show first 20 multiples of n up to g*2
+    for(let k=n; k<=g*2 && count<20; k+=n,count++){
+      shown.add(k);
+      addChip(chips,k,ns,g,idx);
+    }
+    // Ellipsis if truncated
+    if(Math.floor(g*2/n)>20) chips.appendChild(el('span','chip own-'+KEY[idx],'…'));
+    // Always show g and g*2 if not already visible
+    for(const v of [g, g*2]){
+      if(!shown.has(v) && v%n===0) addChip(chips,v,ns,g,idx);
+    }
+
+    row.appendChild(who); row.appendChild(chips); host.appendChild(row);
+  });
+
+  const ex=$('#multExplain'); ex.className='explain empty';
+  ex.textContent='Pasa el ratón o pulsa un múltiplo común para ver qué relación tiene con cada número.';
+}
+
+function addChip(chips,m,ns,g,idx){
+  const isCommon=ns.every(n=>m%n===0);
+  const ch=el(isCommon?'button':'div','chip '+(isCommon?'common':'own-'+KEY[idx]),m);
+  if(isCommon && m===g) ch.classList.add('max');
+  if(isCommon){
+    ch.type='button';
+    ch.setAttribute('aria-label',`Múltiplo común ${m}: ver detalle`);
+    ch.style.cssText='border-style:solid;font:inherit';
+    const show=()=>showMultExplain(m,g);
+    ch.addEventListener('mouseenter',show);ch.addEventListener('click',show);ch.addEventListener('focus',show);
+  }
+  chips.appendChild(ch);
+}
+
+function showMultExplain(m,g){
+  const ns=state.nums, ex=$('#multExplain');
+  ex.className='explain';
+  const pieces=ns.map((n,i)=>`<b>${m}</b> = <b style="color:var(${COLORVAR[i]})">${n}</b> × ${m/n}`).join(' &nbsp;·&nbsp; ');
+  const tail=m===g?` Es el <b>menor</b> múltiplo común: el m.c.m.`:` Pero hay otro múltiplo común menor.`;
+  ex.innerHTML=`${pieces}.${tail}`;
+}
+
+/* ---------- 2 · encuentro ---------- */
+function renderEncuentro(){
+  const ns=state.nums, g=mcmAll(ns);
+
+  // var() no se sustituye en atributos de presentación SVG: resolvemos a colores reales
+  const root=getComputedStyle(document.documentElement);
+  const C=name=>root.getPropertyValue(name).trim()||name;
+  const COL=COLORVAR.map(C);
+  const cMin=C('--min'), cMinDeep=C('--min-deep'), cLine=C('--line'), cMuted=C('--muted');
+
+  // Intro
+  const nterm=ns.map((n,i)=>`<b style="color:${COL[i]}">${n}</b>`);
+  let intro=`El autobús A sale cada ${nterm[0]} minutos, el B cada ${nterm[1]}`;
+  if(ns.length===3) intro+=`, el C cada ${nterm[2]}`;
+  intro+=`. Parten juntos en el minuto 0. ¿En qué minuto vuelven a coincidir por primera vez?`;
+  $('#encIntro').innerHTML=intro;
+
+  // Timeline SVG — salvaguarda: con m.c.m. grandes el nº de marcas se dispara
+  const padL=56, padR=20, rowH=34, rows=ns.length, tlH=rows*rowH+44, axisY=rows*rowH+18;
+  const viewW=520;
+  const marksFor=l=>ns.reduce((s,n)=>s+Math.floor(l/n),0);
+  let limit=g*2;
+  if(marksFor(limit)>600) limit=g;
+  if(marksFor(limit)>600){
+    $('#encSvg').innerHTML=`<p class="note">Con estos números el primer encuentro llega en el minuto `+
+      `<b style="color:${cMinDeep}">${g}</b>: la línea temporal sería demasiado larga para dibujarla. `+
+      `Prueba abajo algunos minutos concretos, o vuelve con números más pequeños.</p>`;
+    buildEncPick(ns,g); drawEncuentro(); return;
+  }
+  const naturalSc=(viewW-padL-padR)/limit;
+  // Garantizamos un hueco mínimo de 5px entre marcas del número más denso
+  const minSc=5/Math.min(...ns);
+  const scale=Math.max(naturalSc,minSc);
+  const totalW=Math.ceil(limit*scale+padL+padR);
+  const smallDot=Math.min(...ns)*scale<12; // puntos pequeños si va apretado
+
+  let svg=`<svg viewBox="0 0 ${totalW} ${tlH}" width="${totalW}" role="img" aria-label="Línea temporal de encuentros">`;
+
+  // Eje
+  svg+=`<line x1="${padL}" y1="${axisY}" x2="${(limit*scale+padL).toFixed(1)}" y2="${axisY}" stroke="${cLine}" stroke-width="1.5"/>`;
+  svg+=`<text x="${padL}" y="${axisY+15}" font-size="11" fill="${cMuted}" text-anchor="middle">0</text>`;
+
+  ns.forEach((n,idx)=>{
+    const rowY=14+idx*rowH;
+    const col=COL[idx];
+    svg+=`<text x="${padL-6}" y="${rowY+6}" text-anchor="end" font-size="12" font-weight="600" fill="${col}">${NAME[idx]}=${n}</text>`;
+
+    for(let k=n; k<=limit; k+=n){
+      const x=(padL+k*scale).toFixed(1);
+      const isCommon=ns.every(nk=>k%nk===0);
+      if(isCommon){
+        const r=smallDot?5:7;
+        svg+=`<circle cx="${x}" cy="${rowY}" r="${r}" fill="${cMin}"${k===g?' class="glow"':''}/>`;
+        if(idx===0){
+          svg+=`<text x="${x}" y="${axisY+15}" font-size="11" font-weight="${k===g?'700':'400'}" fill="${k===g?cMinDeep:cMuted}" text-anchor="middle">${k}</text>`;
+        }
+      }else{
+        const r=smallDot?3:5;
+        svg+=`<circle cx="${x}" cy="${rowY}" r="${r}" fill="${col}" opacity=".8"/>`;
+      }
+    }
+  });
+
+  // Línea vertical discontinua del m.c.m.
+  const mcmX=(padL+g*scale).toFixed(1);
+  svg+=`<line x1="${mcmX}" y1="4" x2="${mcmX}" y2="${axisY-3}" stroke="${cMin}" stroke-width="2.5" stroke-dasharray="5,3" class="glow"/>`;
+
+  $('#encSvg').innerHTML=svg+'</svg>';
+
+  buildEncPick(ns,g);
+  drawEncuentro();
+}
+
+function buildEncPick(ns,g){
+  const cands=new Set();
+  ns.forEach(n=>{for(let k=1; k<=5; k++){const v=n*k;if(v<=g*2)cands.add(v);}});
+  cands.add(g); cands.add(g*2);
+  if(g-1>=2) cands.add(g-1);
+  if(g+1<=g*2) cands.add(g+1);
+
+  const pick=$('#encPick'); pick.innerHTML='';
+  [...cands].sort((a,b)=>a-b).forEach(k=>{
+    const isCommon=ns.every(n=>k%n===0);
+    const btn=el('button',null,k);
+    btn.type='button';
+    if(isCommon && k===g) btn.classList.add('okmax');
+    if(k===state.meet) btn.classList.add('on');
+    btn.addEventListener('click',()=>{
+      state.meet=k;
+      pick.querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.textContent===k));
+      drawEncuentro();
+    });
+    pick.appendChild(btn);
+  });
+}
+
+function drawEncuentro(){
+  const ns=state.nums, k=state.meet, g=mcmAll(ns);
+  const isCommon=ns.every(n=>k%n===0);
+  const v=$('#encVerdict'), details=$('#encDetails');
+  details.innerHTML='';
+
+  ns.forEach((n,i)=>{
+    const q=Math.floor(k/n), r=k%n;
+    const row=el('div','enc-row');
+    row.innerHTML=`<span class="enc-who" style="color:var(${COLORVAR[i]})">Bus ${NAME[i]} (cada ${n} min)</span>`+
+      `<span class="${r===0?'enc-ok':'enc-no'}">${k} ÷ ${n} = ${q}${r>0?` (sobran ${r} min)`:''} ${r===0?'✓':'✗'}</span>`;
+    details.appendChild(row);
+  });
+
+  if(isCommon){
+    v.className='verdict ok';
+    v.innerHTML=`✓ En el minuto <b>${k}</b> coinciden todos. `+(k===g?`Y es el primer encuentro: m.c.m. = ${g}.`:`Funciona, pero se encuentran antes.`);
+  }else{
+    v.className='verdict no';
+    v.innerHTML=`✗ En el minuto <b>${k}</b> no coinciden todos los autobuses.`;
+  }
+}
+
+/* ---------- 3 · tira ---------- */
+function renderTira(){
+  const ns=state.nums, g=mcmAll(ns);
+  const nterms=ns.map((n,i)=>`<b style="color:var(${COLORVAR[i]})">${n}</b>`);
+  let intro = ns.length===3
+    ? `Tienes reglas de longitud ${nterms[0]}, ${nterms[1]} y ${nterms[2]}`
+    : `Tienes reglas de longitud ${nterms[0]} y ${nterms[1]}`;
+  intro+=`. ¿Cuál es la tira <b>más corta</b> que puedes medir exactamente con <b>todas</b> las reglas, sin que sobre nada?`;
+  $('#tiraIntro').innerHTML=intro;
+
+  const r=$('#tiraRange'); r.max=g*2;
+  if(state.tira>g*2) state.tira=g;
+  r.value=state.tira; $('#tiraVal').textContent=state.tira;
+  drawTira();
+}
+
+function drawTira(){
+  const ns=state.nums, L=state.tira, g=mcmAll(ns);
+  const wrap=$('#tirawrap'); wrap.innerHTML='';
+  const maxW=Math.min(500,(window.innerWidth||660)-120);
+
+  ns.forEach((n,idx)=>{
+    const fila=el('div','tirafila');
+    const lab=el('span','tiralabel');
+    lab.innerHTML=`<span style="color:var(${COLORVAR[idx]})">${NAME[idx]}=${n}</span>`;
+
+    const sw=el('div','tiraseg-wrap');
+    sw.style.width=maxW+'px';
+
+    const scale=maxW/L;
+    const nSegs=Math.floor(L/n), rem=L%n, segPx=n*scale;
+
+    if(segPx<8){
+      // Modo comprimido: una sola barra con el recuento, en vez de cientos de segmentos
+      const bodyW=Math.max(nSegs*segPx-1,1), remPx=Math.max(rem*scale-1,0);
+      const bar=el('div');
+      bar.style.cssText=`position:absolute;left:0;top:0;width:${bodyW.toFixed(1)}px;height:36px;`+
+        `background:var(${COLORVAR[idx]});border-radius:4px;display:flex;align-items:center;`+
+        `justify-content:center;font-family:var(--num);font-size:12px;font-weight:600;color:#fff;`;
+      bar.textContent=`${nSegs} × ${n}`;
+      sw.appendChild(bar);
+      if(rem>0 && remPx>0){
+        const rs=el('div');
+        rs.style.cssText=`position:absolute;left:${(nSegs*segPx).toFixed(1)}px;top:0;width:${remPx.toFixed(1)}px;`+
+          `height:36px;background:var(--min);border-radius:4px;`;
+        sw.appendChild(rs);
+      }
+      sw.style.boxShadow=rem===0?`0 0 0 2px var(${COLORVAR[idx]})`:`inset 0 0 0 1.5px var(--line)`;
+      fila.appendChild(lab); fila.appendChild(sw); wrap.appendChild(fila);
+      return;
+    }
+
+    for(let i=0;i<nSegs;i++){
+      const seg=el('div');
+      const w=Math.max(segPx-1,1);
+      seg.style.cssText=`position:absolute;left:${(i*segPx).toFixed(1)}px;top:0;width:${w.toFixed(1)}px;height:36px;`+
+        `background:var(${COLORVAR[idx]});border-radius:4px;`+
+        `display:flex;align-items:center;justify-content:center;`+
+        `font-family:var(--num);font-size:${Math.min(12,w/2.2)}px;font-weight:600;color:#fff;`;
+      if(w>22) seg.textContent=n;
+      sw.appendChild(seg);
+    }
+    if(rem>0){
+      const rPx=rem*scale; const rw=Math.max(rPx-1,1);
+      const rs=el('div');
+      rs.style.cssText=`position:absolute;left:${(nSegs*segPx).toFixed(1)}px;top:0;width:${rw.toFixed(1)}px;height:36px;`+
+        `background:var(--min);border-radius:4px;`+
+        `display:flex;align-items:center;justify-content:center;`+
+        `font-family:var(--num);font-size:${Math.min(11,rw/2.2)}px;font-weight:600;color:#fff;`;
+      if(rw>18) rs.textContent='+'+rem;
+      sw.appendChild(rs);
+    }
+
+    // Border overlay (outside overflow:hidden is not possible, use box-shadow)
+    sw.style.boxShadow=rem===0?`0 0 0 2px var(${COLORVAR[idx]})`:`inset 0 0 0 1.5px var(--line)`;
+
+    fila.appendChild(lab); fila.appendChild(sw); wrap.appendChild(fila);
+  });
+
+  // Verdict
+  const tv=$('#tiraVerdict'), allExact=ns.every(n=>L%n===0);
+  if(allExact && L===g){
+    tv.className='tileverdict best';
+    tv.innerHTML=`¡La tira más corta! Longitud <b>${L}</b>: todas las reglas caben exactas. m.c.m. = ${g}.`;
+  }else if(allExact){
+    tv.className='tileverdict ok';
+    tv.innerHTML=`✓ Con longitud <b>${L}</b> todas encajan exactas… pero existe una tira más corta.`;
+  }else{
+    const fails=ns.map((n,i)=>({n,r:L%n,i})).filter(o=>o.r>0);
+    const txt=fails.map(o=>`regla ${NAME[o.i]} sobra ${o.r}`).join(', ');
+    tv.className='tileverdict no';
+    tv.innerHTML=`Con longitud <b>${L}</b> no encaja exacto (ámbar): ${txt}.`;
+  }
+}
+
+/* ---------- 4 · método ---------- */
+function facHTML(arr){
+  if(arr.length===0) return '<span class="fac">1</span>';
+  return arr.map(([p,e])=>`<span class="fac" data-p="${p}" data-e="${e}">${p}${e>1?`<sup>${e}</sup>`:''}</span>`).join('<span class="times"> × </span>');
+}
+function renderMetodo(){
+  const ns=state.nums, g=mcmAll(ns);
+  const facs=ns.map(factorizar);
+
+  // Para el m.c.m.: tomamos el exponente MÁXIMO de cada primo en todas las factorizaciones
+  const primeMax={};
+  facs.forEach(f=>f.forEach(([p,e])=>{primeMax[p]=Math.max(primeMax[p]||0,e);}));
+  const mcmFacs=Object.entries(primeMax).map(([p,e])=>[+p,+e]).sort((a,b)=>a[0]-b[0]);
+
+  const host=$('#methodHost'); host.innerHTML='';
+  ns.forEach((n,i)=>{
+    const line=el('div','facline '+NAME[i]);
+    line.innerHTML=`<span class="who">${NAME[i]} = ${n}</span>${facHTML(facs[i])}`;
+    host.appendChild(line);
+  });
+  // Resaltamos solo el factor con el MAYOR exponente de cada primo (el que entra en el m.c.m.); el resto se atenúa
+  host.querySelectorAll('.fac').forEach(f=>{
+    const p=+f.dataset.p, e=+f.dataset.e;
+    if(!isNaN(p) && e===primeMax[p]) f.classList.add('hit');
+    else f.classList.add('dim');
+  });
+
+  // Al pasar por un factor, se marca ese mismo primo en todas las descomposiciones
+  host.querySelectorAll('.fac[data-p]').forEach(f=>{
+    f.addEventListener('mouseenter',()=>{
+      host.querySelectorAll(`.fac[data-p="${f.dataset.p}"]`).forEach(x=>x.classList.add('link'));
+    });
+    f.addEventListener('mouseleave',()=>{
+      host.querySelectorAll('.fac.link').forEach(x=>x.classList.remove('link'));
+    });
+  });
+
+  const build=$('#mBuild');
+  if(mcmFacs.length===0){
+    build.innerHTML=`m.c.m. = <span class="res">1</span>`;
+  }else{
+    const expr=mcmFacs.map(([p,e])=>e>1?`${p}<sup>${e}</sup>`:`${p}`).join(' <span class="times">×</span> ');
+    build.innerHTML=`m.c.m. = ${expr} = <span class="res">${g}</span>`;
+  }
+
+  // Propiedad m.c.d. × m.c.m. = A × B (solo con dos números)
+  const prop=$('#mProp');
+  if(ns.length===2){
+    const d=mcd(ns[0],ns[1]);
+    prop.innerHTML=`<h3>Una propiedad útil</h3>`+
+      `<span class="fx">m.c.d. × m.c.m. = ${d} × ${g} = ${d*g} = ${ns[0]} × ${ns[1]}</span>`+
+      `<p class="note" style="margin:6px 0 0">Con dos números, el producto del m.c.d. y el m.c.m. siempre coincide con el producto de ambos. Sirve para comprobar el resultado.</p>`;
+  }else{
+    prop.innerHTML='';
+  }
+
+  // Aplicación: denominador común
+  const fr=(top,bot,col)=>`<span class="frac"${col?` style="color:${col}"`:''}><span class="top">${top}</span><span>${bot}</span></span>`;
+  const root=getComputedStyle(document.documentElement);
+  const cols=COLORVAR.map(v=>root.getPropertyValue(v).trim());
+  const lhs=ns.map((n,i)=>fr(1,n,cols[i])).join('<span class="times"> + </span>');
+  const mid=ns.map((n,i)=>fr(g/n,g,cols[i])).join('<span class="times"> + </span>');
+  const num=ns.reduce((s,n)=>s+g/n,0);
+  $('#mUso').innerHTML=`<h3>¿Y esto para qué sirve? Sumar fracciones</h3>`+
+    `<div class="fx">${lhs}<span class="times"> = </span>${mid}<span class="times"> = </span>${fr(num,g)}</div>`+
+    `<p class="note" style="margin:8px 0 0">El m.c.m. de los denominadores es el <b>mínimo común denominador</b>: `+
+    `el más pequeño al que se pueden reducir todas las fracciones para operar con ellas.</p>`;
+}
+
+/* ---------- tabs ---------- */
+const tabs=[...document.querySelectorAll('.tab')];
+const panels=[$('#p0'),$('#p1'),$('#p2'),$('#p3'),$('#p4')];
+const NT=tabs.length;
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>selectTab(i));
+  t.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'){selectTab((i+1)%NT);tabs[(i+1)%NT].focus();}
+    if(e.key==='ArrowLeft'){selectTab((i+NT-1)%NT);tabs[(i+NT-1)%NT].focus();}
+  });
+});
+function selectTab(i){
+  tabs.forEach((t,j)=>{t.setAttribute('aria-selected',j===i);t.tabIndex=j===i?0:-1;});
+  panels.forEach((p,j)=>p.hidden=j!==i);
+  if(i===2) drawTira();
+}
+selectTab(0);
+
+/* ---------- inputs ---------- */
+document.querySelectorAll('.stepper button.pm').forEach(btn=>{
+  btn.addEventListener('click',()=>{const i=+btn.dataset.i,d=+btn.dataset.d;if(i<state.nums.length)setNum(i,state.nums[i]+d);});
+});
+['in0','in1','in2'].forEach((id,i)=>{
+  const inp=$('#'+id);
+  if(inp) inp.addEventListener('change',e=>{if(i<state.nums.length)setNum(i,e.target.value);});
+});
+$('#addC').addEventListener('click',addThird);
+$('#rmC').addEventListener('click',removeThird);
+$('#tiraRange').addEventListener('input',e=>{
+  state.tira=+e.target.value;
+  $('#tiraVal').textContent=state.tira;
+  drawTira();
+});
+window.addEventListener('resize',()=>{if(!panels[2].hidden) drawTira();});
+
+/* ---------- 5 · practica ---------- */
+const prx={a:0,b:0,fails:0,hits:0,total:0,solved:false};
+const rnd=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
+
+function prxSolutionHTML(a,b){
+  const fa=factorizar(a), fb=factorizar(b), g=mcm(a,b);
+  const pm={};
+  [fa,fb].forEach(f=>f.forEach(([p,e])=>{pm[p]=Math.max(pm[p]||0,e);}));
+  const mf=Object.entries(pm).map(([p,e])=>[+p,+e]).sort((x,y)=>x[0]-y[0]);
+  const expr=mf.map(([p,e])=>e>1?`${p}<sup>${e}</sup>`:`${p}`).join(' <span class="times">×</span> ');
+  return `<div class="method">`+
+    `<div class="facline A"><span class="who">${a}</span>${facHTML(fa)}</div>`+
+    `<div class="facline B"><span class="who">${b}</span>${facHTML(fb)}</div>`+
+    `<div class="build">m.c.m. = ${expr} = <span class="res">${g}</span></div></div>`;
+}
+
+function prxNew(){
+  prx.a=rnd(4,30);
+  do{ prx.b=rnd(4,30); }while(prx.b===prx.a);
+  prx.fails=0; prx.solved=false;
+  $('#prxQ').innerHTML=`m.c.m.(<span style="color:var(--a)">${prx.a}</span>, <span style="color:var(--b)">${prx.b}</span>) = ?`;
+  const inp=$('#prxIn'); inp.value='';
+  if(!panels[4].hidden) inp.focus();
+  const fb=$('#prxFb'); fb.className='prx-fb neutral'; fb.textContent='Escribe tu respuesta y pulsa «Comprobar».';
+  $('#prxSolBox').innerHTML='';
+}
+
+function prxShowSolution(msgOK){
+  const g=mcm(prx.a,prx.b), fb=$('#prxFb');
+  fb.className='prx-fb '+(msgOK?'ok':'no');
+  fb.innerHTML=msgOK
+    ? `✓ Correcto: m.c.m.(${prx.a}, ${prx.b}) = <b>${g}</b>.`
+    : `El m.c.m. de ${prx.a} y ${prx.b} es <b>${g}</b>. Así se obtiene:`;
+  $('#prxSolBox').innerHTML=prxSolutionHTML(prx.a,prx.b);
+  prx.solved=true;
+  updScore();
+}
+
+function updScore(){ $('#prxScore').textContent=prx.total?`Aciertos: ${prx.hits}/${prx.total}`:''; }
+
+function prxCheck(){
+  if(prx.solved) return;
+  const v=parseInt($('#prxIn').value,10), g=mcm(prx.a,prx.b), fb=$('#prxFb');
+  if(isNaN(v)){ fb.className='prx-fb neutral'; fb.textContent='Escribe un número.'; return; }
+  if(v===g){
+    prx.hits++; prx.total++;
+    prxShowSolution(true);
+    return;
+  }
+  prx.fails++;
+  if(prx.fails===1){
+    fb.className='prx-fb no';
+    let hint=`✗ No es ${v}. Pista: descompón cada número en factores primos y toma cada primo con su mayor exponente.`;
+    if(v%prx.a!==0||v%prx.b!==0) hint+=` Fíjate: ${v} ni siquiera es múltiplo de los dos.`;
+    else hint+=` Ojo: ${v} sí es múltiplo común, pero hay uno menor.`;
+    fb.innerHTML=hint;
+  }else{
+    prx.total++;
+    prxShowSolution(false);
+  }
+}
+
+$('#prxNew').addEventListener('click',prxNew);
+$('#prxCheck').addEventListener('click',prxCheck);
+$('#prxSol').addEventListener('click',()=>{ if(!prx.solved){ prx.total++; prxShowSolution(false); } });
+$('#prxIn').addEventListener('keydown',e=>{ if(e.key==='Enter') prxCheck(); });
+
+/* go */
+afterChange();
+prxNew();
+</script>
+</body>
+</html>

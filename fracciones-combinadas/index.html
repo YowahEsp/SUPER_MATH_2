@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Operaciones combinadas con fracciones — paso a paso</title>
+  <style>
+    :root{
+      --bg:#eef3f8; --panel:#fbfdff; --text:#1f2937; --accent:#0e7fb0; --accent-2:#0ea5e9; --muted:#6b7280;
+      --note-mcm:#b45309; --note-simp:#15803d; --note-op:#0e7fb0; --note-pow:#7c3aed; --note-sum:#6b7280;
+      --ui-font: "Helvetica Neue", Helvetica, system-ui, -apple-system, "Segoe UI", Roboto, "Liberation Sans", Arial, sans-serif;
+      --math-font: Palatino, "Palatino Linotype", "URW Palladio L", "Book Antiqua", Georgia, serif;
+      --mono-font: "DejaVu Sans Mono", "JetBrains Mono", "Cascadia Mono", Consolas, "Liberation Mono", Menlo, monospace;
+      --card-shadow: 10px 10px 20px rgba(0,0,0,0.06), -6px -6px 14px rgba(255,255,255,0.7);
+      --inset-shadow: inset 3px 3px 6px rgba(0,0,0,0.06), inset -3px -3px 6px rgba(255,255,255,0.7);
+    }
+    body.dark{ --bg:#0b1020; --panel:#0f1724; --text:#e6eef8; --accent:#38bdf8; --accent-2:#60a5f8; --muted:#9aa6bf;
+      --note-mcm:#fbbf24; --note-simp:#4ade80; --note-op:#38bdf8; --note-pow:#c4b5fd; --note-sum:#9aa6bf;
+      --card-shadow: 8px 8px 18px rgba(0,0,0,0.45), -4px -4px 10px rgba(255,255,255,0.03);
+      --inset-shadow: inset 3px 3px 6px rgba(0,0,0,0.4), inset -2px -2px 5px rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--ui-font);color:var(--text);background:var(--bg);padding:24px;transition:background .2s,color .2s}
+    .app{max-width:1180px;margin:0 auto;background:var(--panel);border-radius:24px;box-shadow:var(--card-shadow);
+      display:grid;grid-template-columns:1fr 360px;gap:22px;padding:24px}
+    header.head{grid-column:1 / -1;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    header.head h1{margin:0;font-size:1.35rem;font-weight:700;letter-spacing:.01em}
+    header.head .sub{color:var(--muted);font-size:.9rem}
+    #main-calc{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+    #editor{border:2px dashed var(--accent-2);padding:18px 20px;border-radius:16px;min-height:96px;
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;outline:none}
+    #editor:focus{border-style:solid}
+    #editor:empty::before{content:'Escribe aquí tu operación…';color:var(--muted);font-size:1rem;font-family:var(--ui-font)}
+    #editor:empty:focus::before{content:''}
+    #editor:empty:focus::after{content:'';display:inline-block;width:2px;height:28px;background:var(--accent);animation:blink 1s step-end infinite}
+    @keyframes blink{50%{opacity:0}}
+
+    .token{display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;cursor:pointer;padding:8px;border-radius:10px;transition:background .12s;font-family:var(--math-font)}
+    .token.frac{flex-direction:column;padding:2px}
+    .token.op,.token.paren{padding:8px 15px;background:rgba(0,0,0,0.05);min-width:46px}
+    body.dark .token.op,body.dark .token.paren{background:rgba(255,255,255,0.08)}
+    .token.selected{background:var(--accent-2);color:#fff;position:relative}
+    /* el cursor de inserción (barra ámbar) solo se ve en modo cursor, no mientras editas un número */
+    #editor:focus .token.selected.mark-before::before,
+    #editor:focus .token.selected.mark-after::after{
+      content:'';position:absolute;top:50%;transform:translateY(-50%);width:3px;height:64%;
+      background:#f59e0b;border-radius:2px;animation:blink 1s step-end infinite}
+    #editor:focus .token.selected.mark-before::before{left:-7px}
+    #editor:focus .token.selected.mark-after::after{right:-7px}
+    .token.frac .num,.token.frac .den,.token.int input{
+      width:62px;padding:4px 6px;font-size:22px;font-family:var(--math-font);text-align:center;
+      border:1px solid #c9d4df;border-radius:7px;background:var(--bg);color:var(--text)}
+    body.dark .token.frac .num,body.dark .token.frac .den,body.dark .token.int input{border-color:#2b3a51}
+    .token.frac .num:focus,.token.frac .den:focus,.token.int input:focus{outline:2px solid var(--accent);outline-offset:1px}
+    .token.frac .bar{height:2px;background:var(--text);width:100%;margin:3px 0}
+
+    /* ---- exponente (potencia) ---- */
+    .token.exp{padding:2px;margin-left:-6px;transform:translateY(-14px);align-self:center}
+    .token.exp input{
+      width:46px;padding:3px 5px;font-size:16px;font-family:var(--math-font);text-align:center;
+      border:1px solid #c9d4df;border-radius:7px;background:var(--bg);color:var(--text)}
+    body.dark .token.exp input{border-color:#2b3a51}
+    .token.exp input:focus{outline:2px solid var(--accent);outline-offset:1px}
+    .token.exp.selected{transform:translateY(-14px)}
+
+    .legend{font-size:13px;color:var(--muted);line-height:1.6;padding:2px 2px 0;margin:0}
+    .legend kbd{font-family:var(--mono-font);background:rgba(0,0,0,.06);padding:1px 6px;border-radius:5px;font-size:12px;color:var(--text)}
+    body.dark .legend kbd{background:rgba(255,255,255,.1)}
+
+    /* ---- ayuda didáctica ---- */
+    details.ayuda{border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:10px 14px;font-size:13.5px;line-height:1.65;background:rgba(0,0,0,.02)}
+    body.dark details.ayuda{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+    details.ayuda summary{cursor:pointer;font-weight:600;color:var(--accent);outline:none}
+    details.ayuda summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    details.ayuda h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:14px 0 4px}
+    details.ayuda ol,details.ayuda ul{margin:4px 0;padding-left:20px}
+    details.ayuda li{margin:2px 0}
+    .chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;font-style:italic}
+    .chip.c-mcm{color:var(--note-mcm);background:color-mix(in srgb,var(--note-mcm) 12%,transparent)}
+    .chip.c-simp{color:var(--note-simp);background:color-mix(in srgb,var(--note-simp) 12%,transparent)}
+    .chip.c-op{color:var(--note-op);background:color-mix(in srgb,var(--note-op) 12%,transparent)}
+    .chip.c-pow{color:var(--note-pow);background:color-mix(in srgb,var(--note-pow) 12%,transparent)}
+
+    #controls{padding:12px;border-radius:14px;background:rgba(0,0,0,0.02);border:1px solid rgba(0,0,0,0.05)}
+    body.dark #controls{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1)}
+    .btn-row{display:flex;gap:10px;margin-bottom:10px}
+    .btn-row:last-child{margin-bottom:0}
+    .btn{flex:1;padding:13px;font-size:17px;font-weight:600;border:none;border-radius:10px;background:var(--panel);color:var(--text);
+      box-shadow:var(--card-shadow);cursor:pointer;transition:transform .12s,box-shadow .12s;font-family:var(--ui-font)}
+    .btn:hover{transform:translateY(-2px)}
+    .btn:active{transform:translateY(0);box-shadow:var(--inset-shadow)}
+    .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.ghost{flex:0 0 auto;background:transparent;box-shadow:none;color:var(--muted);font-size:14px;padding:8px 12px}
+    .btn.ghost:hover{color:var(--text);transform:none}
+    .btn:disabled{opacity:.4;cursor:default;transform:none}
+    .btn .sup{font-size:.7em;vertical-align:super}
+    .utils{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    #textOut{display:none;font-family:var(--mono-font);font-size:14px;background:var(--bg);box-shadow:var(--inset-shadow);
+      padding:8px 12px;border-radius:8px;word-break:break-word}
+    #textOut.show{display:block}
+
+    #sidebar{display:flex;flex-direction:column;gap:14px;background:rgba(0,0,0,0.02);padding:18px;border-radius:16px;min-width:0}
+    body.dark #sidebar{background:rgba(255,255,255,0.04)}
+    #sidebar h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0}
+    #result{background:var(--bg);box-shadow:var(--inset-shadow);border-radius:14px;padding:18px;min-height:120px;
+      display:flex;flex-direction:column;align-items:flex-start;justify-content:center;font-family:var(--math-font)}
+
+    /* ---- generador de ejercicios ---- */
+    .gen{display:flex;flex-direction:column;gap:8px}
+    .gen select{padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,.12);background:var(--panel);color:var(--text);
+      font-family:var(--ui-font);font-size:14px;width:100%}
+    body.dark .gen select{border-color:rgba(255,255,255,.15)}
+    .gen select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+    .gen .btn{font-size:15px;padding:11px}
+    .gen .hint{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
+
+    .big-int{font-size:48px;font-weight:700;color:var(--accent)}
+    .big-frac{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--accent)}
+    .big-sign{font-size:40px}
+    .bf-stack{display:inline-flex;flex-direction:column;align-items:center}
+    .bf-n,.bf-d{font-size:34px;line-height:1.05;padding:0 10px}
+    .bf-bar{height:3px;background:var(--accent);width:100%;border-radius:2px}
+    .result-extra{margin-top:14px;width:100%}
+    .result-line{display:flex;gap:10px;align-items:center;margin-top:8px;font-size:18px;flex-wrap:wrap}
+    .rl-label{font-size:12px;color:var(--muted);min-width:96px;text-transform:uppercase;letter-spacing:.04em;font-family:var(--ui-font)}
+    .rl-val{font-weight:600}
+    .mini-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px}
+    .mini-frac span{font-size:16px;line-height:1;padding:0 4px}
+    .mf-bar{height:2px;background:currentColor;width:100%;margin:1px 0}
+    .rep{text-decoration:overline}
+    .result-error{color:#c0392b;background:rgba(192,57,43,.10);border-left:4px solid #c0392b;padding:12px 14px;border-radius:8px;font-weight:600;font-family:var(--ui-font)}
+    body.dark .result-error{color:#ff8a80;background:rgba(255,82,82,.12)}
+    .result-placeholder{font-size:40px;color:var(--muted);opacity:.45}
+    .mini-btn{margin-top:16px;padding:8px 14px;font-size:14px;font-weight:600;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-family:var(--ui-font)}
+    .mini-btn:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+
+    .muted{color:var(--muted)}
+    .visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+    @media (max-width:880px){
+      body{padding:14px}
+      .app{grid-template-columns:1fr;padding:18px;gap:16px}
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{animation:none !important;transition:none !important}
+    }
+
+    /* ---- desarrollo lineal (estilo pizarra) ---- */
+    #deriv-wrap{grid-column:1 / -1;display:flex;flex-direction:column;gap:14px;
+      background:rgba(0,0,0,0.02);padding:18px;border-radius:16px;min-width:0}
+    body.dark #deriv-wrap{background:rgba(255,255,255,0.04)}
+    #deriv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    #deriv-wrap h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0}
+    #deriv-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    #deriv-controls .btn{flex:0 0 auto;font-size:13px;padding:8px 12px}
+    #deriv-controls .btn[aria-pressed="true"]{background:var(--accent);color:#fff}
+    #steps{overflow-x:auto;overflow-y:visible;
+      background:var(--bg);box-shadow:var(--inset-shadow);border-radius:14px;padding:20px 22px}
+    /* flujo continuo: las expresiones y los "=" se escriben seguidos, alineados a la
+       izquierda; las notas (m.c.m., etc.) cuelgan DEBAJO de su expresión sin romper el flujo */
+    .deriv{font-size:21px;line-height:3.3;text-align:left;color:var(--text);font-family:var(--math-font)}
+    .deriv .chunk{display:inline-block;vertical-align:middle;animation:stepIn .45s both;animation-delay:calc(var(--k,0)*90ms)}
+    .deriv .chunk.veiled{display:none}
+    @keyframes stepIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+    .deriv .step{position:relative;display:inline-flex;align-items:center;vertical-align:middle}
+    .deriv .expr{display:inline-flex;align-items:center;gap:1px;white-space:nowrap;border-radius:8px;transition:background .15s}
+    .deriv .expr:hover{background:rgba(0,0,0,.045)}
+    body.dark .deriv .expr:hover{background:rgba(255,255,255,.06)}
+    .deriv .eq{color:var(--muted);font-weight:700;margin:0 .5em;vertical-align:middle}
+    .deriv .expr.final{font-weight:700;background:rgba(14,127,176,.10);outline:2px solid var(--accent);
+      outline-offset:2px;padding:2px 10px;animation:finalPulse 1s ease 1}
+    body.dark .deriv .expr.final{background:rgba(56,189,248,.12)}
+    @keyframes finalPulse{0%{box-shadow:0 0 0 0 rgba(14,127,176,.35)}100%{box-shadow:0 0 0 16px rgba(14,127,176,0)}}
+    .deriv .note{position:absolute;top:100%;left:3px;margin-top:2px;font-size:.55em;
+      font-style:italic;white-space:nowrap;line-height:1.2;font-family:var(--ui-font)}
+    .deriv .nt{font-weight:600}
+    .deriv .nt-mcm{color:var(--note-mcm)}
+    .deriv .nt-simp{color:var(--note-simp)}
+    .deriv .nt-op{color:var(--note-op)}
+    .deriv .nt-pow{color:var(--note-pow)}
+    .deriv .nt-sum{color:var(--note-sum)}
+    .deriv .nsep{color:var(--muted);margin:0 5px}
+    .deriv .mono{font-family:var(--mono-font);white-space:normal}
+    .deriv .muted{color:var(--muted)}
+    .expr .op{margin:0 7px;color:var(--accent);font-weight:600}
+    .expr .lead{margin-right:1px;color:var(--text)}
+    .expr .par{font-size:1.45em;color:var(--muted);align-self:center;margin:0 1px}
+    .expr .int{font-weight:600}
+    .expr .neg{align-self:center;margin-right:1px}
+    .expr .exp{font-size:.62em;font-weight:700;align-self:flex-start;margin-top:-.2em}
+    .fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 1px}
+    .fr .n,.fr .d{padding:0 7px;line-height:1.12}
+    .fr .b{height:2px;background:currentColor;width:100%;margin:1px 0;border-radius:1px}
+
+    /* ---- impresión (ficha para el aula) ---- */
+    .print-only{display:none}
+    @media print{
+      body{background:#fff;padding:0;color:#000}
+      .app{box-shadow:none;grid-template-columns:1fr;gap:10px;padding:8px;max-width:none}
+      #controls,.utils,.legend,details.ayuda,#deriv-controls,.mini-btn,#sidebar .gen,#sidebar h2:last-of-type{display:none !important}
+      #editor{border:none;min-height:0;padding:6px 0}
+      #steps,#result,#sidebar{box-shadow:none;background:#fff}
+      #sidebar{padding:0}
+      .deriv .chunk.veiled{display:inline-block}  /* en papel se imprime todo el desarrollo */
+      .print-only{display:block;font-size:14px;margin:0 0 10px;border-bottom:1px solid #999;padding-bottom:8px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="head">
+      <h1>Operaciones combinadas con fracciones</h1>
+      <span class="sub">desarrollo lineal paso a paso · jerarquía · m.c.m. · simplificación</span>
+    </header>
+
+    <p class="print-only">Nombre: ______________________________________ &nbsp;&nbsp; Fecha: ____________</p>
+
+    <div id="main-calc">
+      <div id="editor" tabindex="0" role="textbox" aria-label="Editor de la operación. Escribe números, pulsa la barra para crear fracciones y usa los operadores. Navega con las flechas."></div>
+
+      <p class="legend">
+        Escribe un número y pulsa <kbd>/</kbd> para convertirlo en fracción.
+        Agrupa con <kbd>(</kbd> <kbd>[</kbd> <kbd>{</kbd> y eleva a una potencia con <kbd>^</kbd>.
+        Opera con <kbd>+</kbd> <kbd>−</kbd> <kbd>×</kbd> y <kbd>:</kbd> (dividir), o con los botones.
+        Muévete con <kbd>←</kbd> <kbd>→</kbd>, borra con <kbd>⌫</kbd> o <kbd>Supr</kbd> y resuelve con <kbd>Intro</kbd> o <kbd>=</kbd>.
+      </p>
+
+      <details class="ayuda">
+        <summary>Ayuda didáctica · jerarquía, métodos y uso en el aula</summary>
+        <h3>Jerarquía de las operaciones</h3>
+        <ol>
+          <li><strong>Paréntesis</strong>, corchetes y llaves, de dentro hacia fuera.</li>
+          <li><strong>Potencias</strong>: se elevan numerador y denominador.</li>
+          <li><strong>Multiplicaciones y divisiones</strong>, de izquierda a derecha. Multiplicar: «en línea» (numerador por numerador, denominador por denominador). Dividir: «en cruz».</li>
+          <li><strong>Sumas y restas</strong>. Con el mismo denominador se operan los numeradores; con denominadores distintos se reduce a común denominador con el <strong>m.c.m.</strong></li>
+        </ol>
+        <p>El resultado se da siempre como <strong>fracción irreducible</strong> (dividiendo entre el m.c.d.), y se acompaña del número mixto y de la expresión decimal (con periodo, si lo hay).</p>
+        <h3>Notas del desarrollo</h3>
+        <p>Bajo cada paso aparece en pequeño la justificación:
+          <span class="chip c-mcm">m.c.m.</span>
+          <span class="chip c-op">producto / división en cruz</span>
+          <span class="chip c-pow">potencias</span>
+          <span class="chip c-simp">simplificación</span>
+        </p>
+        <h3>Sugerencias de uso en el aula</h3>
+        <ul>
+          <li><strong>Proyección:</strong> activa «Paso a paso» en el desarrollo y ve revelando cada igualdad con un clic; pide al grupo que anticipe el paso siguiente antes de mostrarlo.</li>
+          <li><strong>Ejercicios:</strong> el generador de la derecha crea operaciones por niveles (del 1 al 5) para práctica graduada o para dictar al cuaderno.</li>
+          <li><strong>Fichas:</strong> «Copiar desarrollo» pega la resolución en texto plano (una igualdad por línea, con sus notas) lista para tus documentos; con <kbd>Ctrl</kbd>+<kbd>P</kbd> se imprime como ficha con espacio para nombre y fecha.</li>
+        </ul>
+      </details>
+
+      <div id="controls">
+        <div class="btn-row">
+          <button class="btn" data-action="insert-frac">Fracción</button>
+          <button class="btn" data-action="insert-int">Entero</button>
+          <button class="btn" data-action="insert-exp" aria-label="Elevar a una potencia">x<span class="sup">n</span></button>
+        </div>
+        <div class="btn-row">
+          <button class="btn" data-action="insert-par" data-val="(">(</button>
+          <button class="btn" data-action="insert-par" data-val=")">)</button>
+          <button class="btn" data-action="insert-par" data-val="[">[</button>
+          <button class="btn" data-action="insert-par" data-val="]">]</button>
+          <button class="btn" data-action="insert-par" data-val="{">{</button>
+          <button class="btn" data-action="insert-par" data-val="}">}</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn" data-action="insert-op" data-val="+">+</button>
+          <button class="btn" data-action="insert-op" data-val="-">−</button>
+          <button class="btn" data-action="insert-op" data-val="*">×</button>
+          <button class="btn" data-action="insert-op" data-val="/">÷</button>
+        </div>
+        <div class="btn-row">
+          <button id="calc" class="btn primary" style="flex:2">Resolver</button>
+          <button class="btn" data-action="backspace" aria-label="Borrar elemento">⌫</button>
+          <button class="btn" data-action="clear" aria-label="Limpiar todo">C</button>
+        </div>
+      </div>
+
+      <div class="utils">
+        <button id="showText" class="btn ghost" type="button">Ver como texto</button>
+        <button id="themeToggle" class="btn ghost" type="button">Tema oscuro</button>
+        <div id="textOut" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <aside id="sidebar">
+      <h2>Resultado</h2>
+      <div id="result"><div class="result-placeholder">—</div></div>
+
+      <h2>Generador de ejercicios</h2>
+      <div class="gen">
+        <select id="level" aria-label="Nivel de dificultad del ejercicio">
+          <option value="1">Nivel 1 · Suma y resta (mismo denominador)</option>
+          <option value="2">Nivel 2 · Suma y resta (distinto denominador)</option>
+          <option value="3">Nivel 3 · Multiplicación y división</option>
+          <option value="4">Nivel 4 · Con paréntesis</option>
+          <option value="5">Nivel 5 · Con potencias</option>
+        </select>
+        <button id="genBtn" class="btn" type="button">Generar ejercicio</button>
+        <p class="hint">Carga una operación en el editor sin resolverla: ideal para dictar, proyectar o practicar antes de comprobar.</p>
+      </div>
+    </aside>
+
+    <section id="deriv-wrap">
+      <div id="deriv-head">
+        <h2>Desarrollo paso a paso</h2>
+        <div id="deriv-controls">
+          <button id="stepModeBtn" class="btn" type="button" aria-pressed="false" title="Revelar el desarrollo igualdad a igualdad (modo proyección)">Paso a paso</button>
+          <button id="nextStepBtn" class="btn" type="button" disabled>Siguiente ▸</button>
+          <button id="copyDerivBtn" class="btn" type="button" disabled>Copiar desarrollo</button>
+        </div>
+      </div>
+      <div id="steps"><div class="deriv"><span class="expr muted">Construye una operación y pulsa Resolver.</span></div></div>
+    </section>
+  </div>
+  <div id="announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+"use strict";
+/* ===================== NÚCLEO MATEMÁTICO ===================== */
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a;}
+function lcm(a,b){if(a===0||b===0)return 0;return Math.abs(a/gcd(a,b)*b);}
+function fmt(f){return f.d===1?`${f.n}`:`${f.n}/${f.d}`;}
+/* ===================== MOTOR: AST + REDUCCIÓN LINEAL ===================== */
+function isLowest(f){ if(f.t!=='f')return false; if(f.d<=0)return false; return gcd(f.n,f.d)===1; }
+function needSimp(f){ return f.t==='f' && f.raw && !isLowest(f); }
+function resolved(n){ return n && n.t==='f' && !needSimp(n); }
+function F(n,d=1,raw=false){ if(d<0){n=-n;d=-d;} return {t:'f',n,d,raw}; }
+function ipow(b,e){let r=1;for(let i=0;i<e;i++){r*=b;if(!Number.isSafeInteger(r))throw new Error('El resultado es demasiado grande para calcularlo con exactitud.');}return r;}
+
+function tokenize(s){
+  s=s.replace(/[\[{]/g,'(').replace(/[\]}]/g,')').replace(/[×x·]/g,'*').replace(/[−–]/g,'-').replace(/[÷:]/g,'/');
+  const defs=[
+    {t:'frac',re:/^([+-]?\d+)\/([+-]?\d+)/},
+    {t:'num', re:/^([+-]?\d+)/},
+    {t:'op',  re:/^([+\-*/^])/},
+    {t:'lpar',re:/^(\()/},
+    {t:'rpar',re:/^(\))/},
+    {t:'ws',  re:/^(\s+)/}
+  ];
+  const out=[];let r=s;
+  while(r.length){let m=false;
+    for(const d of defs){const x=r.match(d.re);if(x){
+      if(d.t==='frac')out.push({type:'frac',n:+x[1],d:+x[2]});
+      else if(d.t==='num')out.push({type:'num',v:+x[1]});
+      else if(d.t==='op')out.push({type:'op',v:x[1]});
+      else if(d.t==='lpar')out.push({type:'lpar'});
+      else if(d.t==='rpar')out.push({type:'rpar'});
+      r=r.slice(x[0].length);m=true;break;}}
+    if(!m)throw new Error("Carácter no válido: '"+r[0]+"'.");
+  }
+  return out;
+}
+function parse(tokens){
+  let i=0; const peek=()=>tokens[i], next=()=>tokens[i++];
+  function atom(){
+    const t=peek(); if(!t)throw new Error('Falta un número: revisa la operación.');
+    if(t.type==='lpar'){next();const e=sum();const c=peek();if(!c||c.type!=='rpar')throw new Error('Hay paréntesis sin cerrar.');next();return {t:'par',inner:e};}
+    if(t.type==='frac'){next();if(t.d===0)throw new Error('El denominador no puede ser 0.');return F(t.n,t.d);}
+    if(t.type==='num'){next();return F(t.v,1);}
+    throw new Error('Se esperaba un número.');
+  }
+  function pow(){
+    let b=atom();
+    while(peek()&&peek().type==='op'&&peek().v==='^'){next();const e=peek();
+      if(!e||(e.type!=='num'&&!(e.type==='frac'&&e.d===1)))throw new Error('El exponente debe ser un número entero.');
+      next();const ev=(e.type==='num')?e.v:e.n; b={t:'pow',base:b,e:ev};}
+    return b;
+  }
+  function mul(){
+    let items=[{op:'*',node:pow()}];
+    while(peek()&&peek().type==='op'&&(peek().v==='*'||peek().v==='/')){const op=next().v;items.push({op,node:pow()});}
+    return items.length===1?items[0].node:{t:'mul',items};
+  }
+  function sum(){
+    let items=[]; let s='+';
+    if(peek()&&peek().type==='op'&&(peek().v==='+'||peek().v==='-')){s=next().v;}
+    items.push({op:s,node:mul()});
+    while(peek()&&peek().type==='op'&&(peek().v==='+'||peek().v==='-')){const op=next().v;items.push({op,node:mul()});}
+    return (items.length===1&&items[0].op==='+')?items[0].node:{t:'sum',items};
+  }
+  const r=sum();
+  if(i<tokens.length)throw new Error('La operación no está completa.');
+  return r;
+}
+
+/* ---- render a HTML (fracciones apiladas, estilo pizarra) ---- */
+function frHTML(f){
+  if(f.d===1)return `<span class="int">${f.n}</span>`;
+  const neg=f.n<0, an=Math.abs(f.n);
+  return `${neg?'<span class="neg">−</span>':''}<span class="fr"><span class="n">${an}</span><span class="b"></span><span class="d">${f.d}</span></span>`;
+}
+/* profundidad de anidamiento de paréntesis (para elegir el delimitador) */
+function parRank(node){
+  if(!node)return 0;
+  switch(node.t){
+    case 'f':return 0;
+    case 'par':return 1+parRank(node.inner);
+    case 'pow':return parRank(node.base);
+    case 'mul':
+    case 'sum':return node.items.reduce((m,it)=>Math.max(m,parRank(it.node)),0);
+  }
+  return 0;
+}
+const DELIMS=[['(',')'],['[',']'],['{','}']];
+function delimFor(depth){return DELIMS[(depth-1)%3];}
+function rHTML(node){
+  if(node.t==='f')return frHTML(node);
+  if(node.t==='par'){const[o,c]=delimFor(parRank(node));
+    return `<span class="par">${o}</span>`+rHTML(node.inner)+`<span class="par">${c}</span>`;}
+  if(node.t==='pow'){let b=rHTML(node.base);
+    if(node.base.t==='f'&&(node.base.d!==1||node.base.n<0))b='<span class="par">(</span>'+b+'<span class="par">)</span>';
+    return b+'<sup class="exp">'+node.e+'</sup>';}
+  if(node.t==='mul')return node.items.map((it,k)=>(k===0?'':`<span class="op">${it.op==='*'?'·':':'}</span>`)+rHTML(it.node)).join('');
+  if(node.t==='sum')return node.items.map((it,k)=>{
+    if(k===0)return (it.op==='-'?'<span class="lead">−</span>':'')+rHTML(it.node);
+    return `<span class="op">${it.op==='+'?'+':'−'}</span>`+rHTML(it.node);
+  }).join('');
+  return '';
+}
+/* ---- render a texto plano (para «Copiar desarrollo») ---- */
+function rText(node){
+  if(node.t==='f')return node.d===1?String(node.n):`${node.n}/${node.d}`;
+  if(node.t==='par'){const[o,c]=delimFor(parRank(node));return o+rText(node.inner)+c;}
+  if(node.t==='pow'){let b=rText(node.base);
+    if(node.base.t==='f'&&(node.base.d!==1||node.base.n<0))b='('+b+')';
+    return b+'^'+node.e;}
+  if(node.t==='mul')return node.items.map((it,k)=>(k===0?'':(it.op==='*'?' · ':' : '))+rText(it.node)).join('');
+  if(node.t==='sum')return node.items.map((it,k)=>{
+    if(k===0)return (it.op==='-'?'-':'')+rText(it.node);
+    return (it.op==='+'?' + ':' - ')+rText(it.node);
+  }).join('');
+  return '';
+}
+
+/* ---- motor de reducción por pasadas ---- */
+function hasPow(n){if(n.t==='pow')return true;if(n.t==='mul'||n.t==='sum')return n.items.some(it=>hasPow(it.node));return false;}
+function hasMul(n){if(n.t==='mul'&&n.items.length>=2)return true;if(n.t==='mul'||n.t==='sum')return n.items.some(it=>hasMul(it.node));return false;}
+function rawBad(n){if(n.t==='f')return needSimp(n);if(n.t==='par')return rawBad(n.inner);if(n.t==='pow')return rawBad(n.base);if(n.t==='mul'||n.t==='sum')return n.items.some(it=>rawBad(it.node));return false;}
+function collectParens(n,acc){
+  if(n.t==='par'){const before=acc.length;collectParens(n.inner,acc);if(acc.length===before&&!resolved(n.inner))acc.push(n);return;}
+  if(n.t==='pow'){collectParens(n.base,acc);return;}
+  if(n.t==='mul'||n.t==='sum'){n.items.forEach(it=>collectParens(it.node,acc));return;}
+}
+function anyParenWork(n){const a=[];collectParens(n,a);return a.length>0;}
+
+/* notas didácticas del paso (se muestran bajo la expresión) */
+let stepNotes=[];
+function pushNote(kind,text){ if(!stepNotes.some(x=>x.text===text)) stepNotes.push({kind,text}); }
+
+function advanceOne(node){
+  if(rawBad(node))return {node:simplifyAll(node),changed:true};
+  if(hasPow(node))return {node:powAll(node),changed:true};
+  if(hasMul(node))return {node:mulStep(node),changed:true};
+  if(node.t==='sum'&&node.items.length>=2)return {node:sumStep(node),changed:true};
+  return {node,changed:false};
+}
+function simplifyAll(n){
+  if(n.t==='f'){
+    if(needSimp(n)){
+      const g=gcd(n.n,n.d);let nn=n.n/g,dd=n.d/g;if(dd<0){nn=-nn;dd=-dd;}
+      if(g>1)pushNote('simp','simplificamos: ÷'+g);
+      return {t:'f',n:nn,d:dd,raw:false};
+    }
+    if(n.raw&&isLowest(n))n.raw=false;return n;
+  }
+  if(n.t==='par'){n.inner=simplifyAll(n.inner);return n;}
+  if(n.t==='pow'){n.base=simplifyAll(n.base);return n;}
+  if(n.t==='mul'||n.t==='sum'){n.items.forEach(it=>it.node=simplifyAll(it.node));return n;}
+  return n;
+}
+function powAll(n){
+  if(n.t==='pow'){
+    let bf=n.base.t==='par'?n.base.inner:n.base;
+    if(bf.t!=='f'){n.base=powAll(n.base);return n;}
+    const e=n.e; if(e===0){if(bf.n===0)throw new Error('La operación 0^0 no está definida.');pushNote('pow','todo número (≠ 0) elevado a 0 vale 1');return F(1,1,false);}
+    if(e<0&&bf.n===0)throw new Error('No se puede elevar 0 a un exponente negativo: equivale a dividir entre 0.');
+    const k=Math.abs(e); const nn=ipow(bf.n,k),dd=ipow(bf.d,k);
+    if(e<0)pushNote('pow','exponente negativo: se invierte la fracción');
+    else pushNote('pow',bf.d!==1?'potencia: se elevan numerador y denominador':'resolvemos la potencia');
+    return e<0?F(dd,nn,true):F(nn,dd,true);
+  }
+  if(n.t==='par'){n.inner=powAll(n.inner);return n;}
+  if(n.t==='mul'||n.t==='sum'){n.items.forEach(it=>it.node=powAll(it.node));return n;}
+  return n;
+}
+function mulStep(n){
+  if(n.t==='mul'&&n.items.length>=2){
+    const a=n.items[0].node,b=n.items[1].node;
+    if(a.t==='f'&&b.t==='f'){
+      let nn,dd;
+      if(n.items[1].op==='*'){nn=a.n*b.n;dd=a.d*b.d;pushNote('op','producto: se multiplica en línea');}
+      else{if(b.n===0)throw new Error('No se puede dividir entre 0.');nn=a.n*b.d;dd=a.d*b.n;pushNote('op','división: se multiplica en cruz');}
+      n.items=[{op:n.items[0].op,node:F(nn,dd,true)},...n.items.slice(2)];
+      return n.items.length===1?n.items[0].node:n;
+    }
+    n.items.forEach(it=>it.node=mulStep(it.node));return n;
+  }
+  if(n.t==='mul'||n.t==='sum'){n.items.forEach(it=>it.node=mulStep(it.node));return n;}
+  return n;
+}
+function sumStep(n){
+  if(!(n.t==='sum'&&n.items.length>=2)){if(n.t==='mul'||n.t==='sum')n.items.forEach(it=>it.node=sumStep(it.node));return n;}
+  const fr=n.items.map(it=>it.node);
+  if(!fr.every(x=>x.t==='f')){n.items.forEach(it=>it.node=sumStep(it.node));return n;}
+  const dens=fr.map(x=>x.d), allEq=dens.every(d=>d===dens[0]);
+  if(!allEq){
+    const m=dens.reduce((a,b)=>lcm(a,b));
+    n.items.forEach(it=>{const f=it.node;it.node=F(f.n*(m/f.d),m,false);});
+    pushNote('mcm','m.c.m.('+[...new Set(dens)].join(', ')+') = '+m);
+    return n;
+  }
+  const D=dens[0]; let num=0;
+  n.items.forEach(it=>{num+=(it.op==='-'?-1:1)*it.node.n;});
+  if(D!==1)pushNote('sum','mismo denominador: operamos los numeradores');
+  return F(num,D,true);
+}
+function cleanup(n,isPowBase=false){
+  if(n.t==='par'){n.inner=cleanup(n.inner,false);if(resolved(n.inner)&&!isPowBase)return n.inner;return n;}
+  if(n.t==='pow'){n.base=cleanup(n.base,true);return n;}
+  if(n.t==='mul'){n.items.forEach(it=>it.node=cleanup(it.node,false));return n.items.length===1?n.items[0].node:n;}
+  if(n.t==='sum'){n.items.forEach(it=>it.node=cleanup(it.node,false));return (n.items.length===1&&n.items[0].op==='+')?n.items[0].node:n;}
+  return n;
+}
+function step(tree){
+  stepNotes=[]; let changed=false;
+  if(anyParenWork(tree)){
+    const ps=[];collectParens(tree,ps);
+    ps.forEach(p=>{const r=advanceOne(p.inner);p.inner=r.node;changed=changed||r.changed;});
+  }else{
+    const r=advanceOne(tree);tree=r.node;changed=r.changed;
+  }
+  tree=cleanup(tree);
+  return {tree,changed,notes:stepNotes};
+}
+function solve(expr){
+  let tree=cleanup(parse(tokenize(expr)));
+  const lines=[{html:rHTML(tree),text:rText(tree),notes:[]}];
+  let guard=0;
+  while(guard++<800){
+    const r=step(tree); if(!r.changed)break; tree=r.tree;
+    const h=rHTML(tree);
+    if(h===lines[lines.length-1].html && r.notes.length===0) continue;
+    lines.push({html:h,text:rText(tree),notes:r.notes});
+  }
+  return {lines,final:tree};
+}
+
+function mixed(f){
+  if(f.d===1||Math.abs(f.n)<f.d)return null;
+  return{whole:Math.trunc(f.n/f.d),n:Math.abs(f.n)%f.d,d:f.d};
+}
+function decimal(f){
+  const sign=f.n<0?'-':'';let N=Math.abs(f.n);const D=f.d;
+  const whole=Math.floor(N/D);let rem=N%D;
+  if(rem===0)return{sign,whole:String(whole),nonRep:'',rep:''};
+  const seen={};const digits=[];let repStart=-1,i=0;
+  while(rem!==0&&i<4096){
+    if(seen[rem]!==undefined){repStart=seen[rem];break;}
+    seen[rem]=i;rem*=10;digits.push(Math.floor(rem/D));rem%=D;i++;
+  }
+  if(repStart===-1)return{sign,whole:String(whole),nonRep:digits.join(''),rep:''};
+  return{sign,whole:String(whole),nonRep:digits.slice(0,repStart).join(''),rep:digits.slice(repStart).join('')};
+}
+
+/* ===================== EDITOR VISUAL ===================== */
+const editor=document.getElementById('editor');
+const resultEl=document.getElementById('result');
+const stepsEl=document.getElementById('steps');
+const textOut=document.getElementById('textOut');
+const announcer=document.getElementById('announcer');
+function announce(m){announcer.textContent=m;}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+let selected=null, insertMode='after';
+function clearMarks(){if(selected)selected.classList.remove('selected','mark-before','mark-after');}
+function paint(){if(selected){selected.classList.add('selected');selected.classList.remove('mark-before','mark-after');selected.classList.add(insertMode==='before'?'mark-before':'mark-after');}}
+function setSelected(el){clearMarks();selected=el;paint();}
+function hasInput(t){return t&&(t.dataset.type==='int'||t.dataset.type==='frac'||t.dataset.type==='exp');}
+function isOpenGroup(v){return v==='('||v==='['||v==='{';}
+
+function sanitizeInt(inp){let v=inp.value;const neg=v.trim().startsWith('-');v=v.replace(/[^\d]/g,'');inp.value=(neg?'-':'')+v;}
+
+/* ---- creación de fichas (tokens) ---- */
+function createInt(v='',focus=false){
+  const span=document.createElement('span');
+  span.className='token int';span.dataset.type='int';span.tabIndex=-1;
+  const inp=document.createElement('input');
+  inp.type='text';inp.inputMode='numeric';inp.setAttribute('aria-label','Número entero');inp.placeholder='n';inp.value=v;
+  span.appendChild(inp);
+  span.addEventListener('click',handleTokenClick);
+  inp.addEventListener('focus',()=>{setSelected(span);insertMode='after';});
+  inp.addEventListener('input',()=>sanitizeInt(inp));
+  inp.addEventListener('keydown',e=>intKeydown(e,span,inp));
+  if(focus)setTimeout(()=>inp.focus(),0);
+  return span;
+}
+function createFrac(num='',den='',focusWhich='num'){
+  const span=document.createElement('span');
+  span.className='token frac';span.dataset.type='frac';span.tabIndex=-1;
+  const ni=document.createElement('input');ni.type='text';ni.inputMode='numeric';ni.className='num';ni.setAttribute('aria-label','Numerador');ni.placeholder='n';ni.value=num;
+  const bar=document.createElement('div');bar.className='bar';
+  const di=document.createElement('input');di.type='text';di.inputMode='numeric';di.className='den';di.setAttribute('aria-label','Denominador');di.placeholder='d';di.value=den;
+  span.append(ni,bar,di);
+  span.addEventListener('click',handleTokenClick);
+  [ni,di].forEach(inp=>{inp.addEventListener('focus',()=>{setSelected(span);insertMode='after';});inp.addEventListener('input',()=>sanitizeInt(inp));});
+  ni.addEventListener('keydown',e=>fracNumKeydown(e,span,ni,di));
+  di.addEventListener('keydown',e=>fracDenKeydown(e,span,ni,di));
+  if(focusWhich)setTimeout(()=>{(focusWhich==='den'?di:ni).focus();},0);
+  return span;
+}
+function createExp(v='',focus=false){
+  const span=document.createElement('span');
+  span.className='token exp';span.dataset.type='exp';span.tabIndex=-1;
+  const inp=document.createElement('input');
+  inp.type='text';inp.inputMode='numeric';inp.setAttribute('aria-label','Exponente (potencia)');inp.placeholder='n';inp.value=v;
+  span.appendChild(inp);
+  span.addEventListener('click',handleTokenClick);
+  inp.addEventListener('focus',()=>{setSelected(span);insertMode='after';});
+  inp.addEventListener('input',()=>sanitizeInt(inp));
+  inp.addEventListener('keydown',e=>expKeydown(e,span,inp));
+  if(focus)setTimeout(()=>inp.focus(),0);
+  return span;
+}
+function createOp(opKey){
+  const span=document.createElement('span');
+  span.className='token op';span.dataset.type='op';span.tabIndex=-1;span.dataset.val=opKey;
+  span.textContent=({'+':'+','-':'−','*':'×','/':'÷'})[opKey]||opKey;
+  span.addEventListener('click',handleTokenClick);return span;
+}
+function createParen(ch){
+  const span=document.createElement('span');
+  span.className='token paren';span.dataset.type='paren';span.tabIndex=-1;span.dataset.val=ch;span.textContent=ch;
+  span.addEventListener('click',handleTokenClick);return span;
+}
+
+/* ---- inserción / borrado / selección ---- */
+function insertElement(el){
+  if(!selected)editor.appendChild(el);
+  else if(insertMode==='after')selected.after(el);else selected.before(el);
+  setSelected(el);insertMode='after';paint();
+  return el;
+}
+function addOp(opKey){insertElement(createOp(opKey));editor.focus();paint();}
+function addParen(ch){insertElement(createParen(ch));editor.focus();paint();}
+function addFrac(){insertElement(createFrac('','','num'));}
+function addInt(ch){insertElement(createInt(ch,true));}
+function addExp(){insertElement(createExp('',true));}
+
+function deleteToken(span){
+  if(!span)return;
+  const prev=span.previousElementSibling,next=span.nextElementSibling;
+  span.remove();
+  if(prev)selectAndFocus(prev,'end');
+  else if(next)selectAndFocus(next,'start');
+  else{selected=null;editor.focus();}
+  announce('Elemento borrado.');
+}
+function selectAndFocus(token,edge){
+  if(!token){selected=null;editor.focus();return;}
+  const type=token.dataset.type;
+  if(type==='int'||type==='exp'){setSelected(token);insertMode='after';const inp=token.querySelector('input');inp.focus();const p=edge==='start'?0:inp.value.length;try{inp.setSelectionRange(p,p);}catch(_){}}
+  else if(type==='frac'){setSelected(token);insertMode='after';const num=token.querySelector('.num'),den=token.querySelector('.den');if(edge==='start'){num.focus();try{num.setSelectionRange(0,0);}catch(_){}}else{den.focus();try{den.setSelectionRange(den.value.length,den.value.length);}catch(_){}}}
+  else{setSelected(token);insertMode=edge==='start'?'before':'after';editor.focus();paint();}
+}
+function moveOut(span,dir){
+  const target=dir==='left'?span.previousElementSibling:span.nextElementSibling;
+  if(!target){setSelected(span);insertMode=dir==='left'?'before':'after';editor.focus();paint();return;}
+  selectAndFocus(target,dir==='left'?'end':'start');
+}
+
+/* ---- ¿se espera un operando aquí? (para el signo menos) ---- */
+function leftTokenAtInsertion(){
+  if(!selected)return editor.lastElementChild;
+  return insertMode==='after'?selected:selected.previousElementSibling;
+}
+function operandExpected(){
+  const L=leftTokenAtInsertion();
+  if(!L)return true;
+  if(L.dataset.type==='op')return true;
+  if(L.dataset.type==='paren'&&isOpenGroup(L.dataset.val))return true;
+  return false;
+}
+
+/* ---- clics ---- */
+function handleTokenClick(e){
+  e.stopPropagation();
+  const token=e.currentTarget;
+  if(e.target.tagName==='INPUT'){setSelected(token);insertMode='after';return;}
+  const r=token.getBoundingClientRect();
+  insertMode=e.clientX<r.left+r.width/2?'before':'after';
+  setSelected(token);editor.focus();paint();
+}
+editor.addEventListener('click',e=>{
+  if(e.target===editor){
+    const last=editor.lastElementChild;
+    if(last){setSelected(last);insertMode='after';}else{selected=null;}
+    editor.focus();paint();
+  }
+});
+
+/* ---- teclado dentro de los números ---- */
+function intKeydown(e,span,inp){
+  const k=e.key;
+  if(k==='/'){e.preventDefault();const f=createFrac(inp.value,'','den');span.replaceWith(f);setSelected(f);return;}
+  if(k==='^'){e.preventDefault();finishExp(span);return;}
+  if(k==='Enter'||k==='='){e.preventDefault();inp.blur();compute();return;}
+  if(k==='+'){e.preventDefault();finishOp(span,'+');return;}
+  if(k==='*'||k==='x'||k==='×'){e.preventDefault();finishOp(span,'*');return;}
+  if(k===':'||k==='÷'){e.preventDefault();finishOp(span,'/');return;}
+  if(k==='-'){if(inp.value==='')return;e.preventDefault();finishOp(span,'-');return;}
+  if(k==='('||k===')'||k==='['||k===']'||k==='{'||k==='}'){e.preventDefault();finishParen(span,k);return;}
+  if(k==='ArrowLeft'){if(inp.selectionStart===0){e.preventDefault();moveOut(span,'left');}return;}
+  if(k==='ArrowRight'){if(inp.selectionStart===inp.value.length){e.preventDefault();moveOut(span,'right');}return;}
+  if(k==='Backspace'){if(inp.value===''){e.preventDefault();deleteToken(span);}return;}
+}
+function fracNumKeydown(e,span,ni,di){
+  const k=e.key;
+  if(k==='/'||k==='Enter'||k==='ArrowDown'){e.preventDefault();di.focus();try{di.setSelectionRange(0,0);}catch(_){}return;}
+  if(k==='^'){e.preventDefault();finishExp(span);return;}
+  if(k==='='){e.preventDefault();ni.blur();compute();return;}
+  if(k==='ArrowRight'){if(ni.selectionStart===ni.value.length){e.preventDefault();di.focus();try{di.setSelectionRange(0,0);}catch(_){}}return;}
+  if(k==='ArrowLeft'){if(ni.selectionStart===0){e.preventDefault();moveOut(span,'left');}return;}
+  if(k==='+'){e.preventDefault();finishOp(span,'+');return;}
+  if(k==='*'||k==='x'||k==='×'){e.preventDefault();finishOp(span,'*');return;}
+  if(k===':'||k==='÷'){e.preventDefault();finishOp(span,'/');return;}
+  if(k==='-'){if(ni.value==='')return;e.preventDefault();finishOp(span,'-');return;}
+  if(k==='('||k===')'||k==='['||k===']'||k==='{'||k==='}'){e.preventDefault();finishParen(span,k);return;}
+  if(k==='Backspace'){if(ni.value===''){e.preventDefault();deleteToken(span);}return;}
+}
+function fracDenKeydown(e,span,ni,di){
+  const k=e.key;
+  if(k==='/'){e.preventDefault();return;}
+  if(k==='^'){e.preventDefault();finishExp(span);return;}
+  if(k==='Enter'||k==='='){e.preventDefault();di.blur();compute();return;}
+  if(k==='ArrowUp'){e.preventDefault();ni.focus();try{ni.setSelectionRange(ni.value.length,ni.value.length);}catch(_){}return;}
+  if(k==='ArrowLeft'){if(di.selectionStart===0){e.preventDefault();ni.focus();try{ni.setSelectionRange(ni.value.length,ni.value.length);}catch(_){}}return;}
+  if(k==='ArrowRight'){if(di.selectionStart===di.value.length){e.preventDefault();moveOut(span,'right');}return;}
+  if(k==='+'){e.preventDefault();finishOp(span,'+');return;}
+  if(k==='*'||k==='x'||k==='×'){e.preventDefault();finishOp(span,'*');return;}
+  if(k===':'||k==='÷'){e.preventDefault();finishOp(span,'/');return;}
+  if(k==='-'){if(di.value==='')return;e.preventDefault();finishOp(span,'-');return;}
+  if(k==='('||k===')'||k==='['||k===']'||k==='{'||k==='}'){e.preventDefault();finishParen(span,k);return;}
+  if(k==='Backspace'){if(di.value===''){e.preventDefault();ni.focus();try{ni.setSelectionRange(ni.value.length,ni.value.length);}catch(_){}}return;}
+}
+function expKeydown(e,span,inp){
+  const k=e.key;
+  if(k==='Enter'||k==='='){e.preventDefault();inp.blur();compute();return;}
+  if(k==='/'||k==='^'){e.preventDefault();return;} // los exponentes son enteros: ignoramos / y ^
+  if(k==='+'){e.preventDefault();finishOp(span,'+');return;}
+  if(k==='*'||k==='x'||k==='×'){e.preventDefault();finishOp(span,'*');return;}
+  if(k===':'||k==='÷'){e.preventDefault();finishOp(span,'/');return;}
+  if(k==='-'){if(inp.value==='')return;e.preventDefault();finishOp(span,'-');return;}
+  if(k==='('||k===')'||k==='['||k===']'||k==='{'||k==='}'){e.preventDefault();finishParen(span,k);return;}
+  if(k==='ArrowLeft'){if(inp.selectionStart===0){e.preventDefault();moveOut(span,'left');}return;}
+  if(k==='ArrowRight'){if(inp.selectionStart===inp.value.length){e.preventDefault();moveOut(span,'right');}return;}
+  if(k==='Backspace'){if(inp.value===''){e.preventDefault();deleteToken(span);}return;}
+}
+function finishOp(span,opKey){setSelected(span);insertMode='after';addOp(opKey);}
+function finishParen(span,ch){setSelected(span);insertMode='after';addParen(ch);}
+function finishExp(span){setSelected(span);insertMode='after';addExp();}
+
+/* ---- teclado a nivel de editor (modo cursor) ---- */
+function currentGap(ch){if(!selected)return ch.length;const i=ch.indexOf(selected);if(i<0)return ch.length;return i+(insertMode==='after'?1:0);}
+function navRight(){
+  const ch=Array.from(editor.children);const g=currentGap(ch);
+  if(g>=ch.length)return;
+  const t=ch[g];
+  if(hasInput(t))selectAndFocus(t,'start');
+  else{setSelected(t);insertMode='after';editor.focus();paint();}
+}
+function navLeft(){
+  const ch=Array.from(editor.children);const g=currentGap(ch);
+  if(g<=0)return;
+  const t=ch[g-1];
+  if(hasInput(t))selectAndFocus(t,'end');
+  else{setSelected(t);insertMode='before';editor.focus();paint();}
+}
+editor.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return; // dentro de un número lo gestiona su propio handler
+  const k=e.key;
+  if(/^[0-9]$/.test(k)){e.preventDefault();addInt(k);return;}
+  if(k==='-'){e.preventDefault();if(operandExpected())addInt('-');else addOp('-');return;}
+  if(k==='+'){e.preventDefault();addOp('+');return;}
+  if(k==='*'||k==='x'||k==='×'){e.preventDefault();addOp('*');return;}
+  if(k===':'||k==='÷'){e.preventDefault();addOp('/');return;}
+  if(k==='/'){e.preventDefault();addFrac();return;}
+  if(k==='^'){e.preventDefault();addExp();return;}
+  if(k==='('||k===')'||k==='['||k===']'||k==='{'||k==='}'){e.preventDefault();addParen(k);return;}
+  if(k==='Enter'||k==='='){e.preventDefault();compute();return;}
+  if(k==='ArrowLeft'){e.preventDefault();navLeft();return;}
+  if(k==='ArrowRight'){e.preventDefault();navRight();return;}
+  if(k==='Backspace'){e.preventDefault();deleteToken(leftTokenAtInsertion());return;}
+  if(k==='Delete'){e.preventDefault();const ch2=Array.from(editor.children);const g=currentGap(ch2);if(ch2[g])deleteToken(ch2[g]);return;}
+});
+
+/* ---- botones ---- */
+document.querySelectorAll('#controls [data-action]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const a=btn.dataset.action;
+    if(a==='insert-frac'){addFrac();announce('Fracción añadida.');}
+    else if(a==='insert-int'){addInt('');announce('Entero añadido.');}
+    else if(a==='insert-exp'){addExp();announce('Exponente añadido.');}
+    else if(a==='insert-op'){addOp(btn.dataset.val);announce('Operador añadido.');}
+    else if(a==='insert-par'){addParen(btn.dataset.val);announce('Símbolo de agrupación añadido.');}
+    else if(a==='backspace'){deleteToken(selected||editor.lastElementChild);}
+    else if(a==='clear'){clearAll();}
+  });
+});
+document.getElementById('calc').addEventListener('click',compute);
+document.getElementById('showText').addEventListener('click',()=>{
+  const e=buildExpression();
+  textOut.textContent=e?displayExpr(e):'(vacío)';
+  textOut.classList.toggle('show');
+});
+document.getElementById('themeToggle').addEventListener('click',e=>{
+  const dark=document.body.classList.toggle('dark');
+  e.currentTarget.textContent=dark?'Tema claro':'Tema oscuro';
+});
+
+/* ===================== GENERADOR DE EJERCICIOS ===================== */
+function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function pick(arr){return arr[ri(0,arr.length-1)];}
+function rFrac(maxN=9,maxD=9){return {frac:[ri(1,maxN),ri(2,maxD)]};}
+function genLevel(v){
+  switch(v){
+    case '1':{ // mismo denominador, 2–3 términos
+      const d=ri(3,9),k=ri(2,3),out=[{frac:[ri(1,9),d]}];
+      for(let i=1;i<k;i++){out.push({op:pick(['+','-'])});out.push({frac:[ri(1,9),d]});}
+      return out;
+    }
+    case '2':{ // denominadores distintos (m.c.m. amable)
+      const pool=[2,3,4,5,6,8,9,10,12],k=ri(2,3),ds=[];
+      while(ds.length<k){const d=pick(pool);if(!ds.includes(d))ds.push(d);}
+      const out=[{frac:[ri(1,9),ds[0]]}];
+      for(let i=1;i<k;i++){out.push({op:pick(['+','-'])});out.push({frac:[ri(1,9),ds[i]]});}
+      return out;
+    }
+    case '3':{ // producto/división combinados con suma o resta
+      return [rFrac(),{op:pick(['*','/'])},rFrac(),{op:pick(['+','-'])},rFrac(6,8)];
+    }
+    case '4':{ // paréntesis
+      return [rFrac(),{op:pick(['*','/'])},{par:'('},rFrac(6,8),{op:pick(['+','-'])},rFrac(6,8),{par:')'}];
+    }
+    case '5':{ // potencias sobre un paréntesis
+      return [{par:'('},rFrac(4,5),{op:pick(['+','-'])},rFrac(4,5),{par:')'},{exp:ri(2,3)},{op:pick(['+','-','*','/'])},rFrac(6,8)];
+    }
+  }
+  return [];
+}
+function loadTokens(list){
+  editor.innerHTML='';selected=null;
+  for(const t of list){
+    let el=null;
+    if('int' in t)el=createInt(String(t.int));
+    else if('frac' in t)el=createFrac(String(t.frac[0]),String(t.frac[1]),null);
+    else if('op' in t)el=createOp(t.op);
+    else if('par' in t)el=createParen(t.par);
+    else if('exp' in t)el=createExp(String(t.exp));
+    if(el)editor.appendChild(el);
+  }
+  const last=editor.lastElementChild;
+  if(last){setSelected(last);insertMode='after';}
+  resultEl.innerHTML='<div class="result-placeholder">—</div>';
+  stepsEl.innerHTML='<div class="deriv"><span class="expr muted">Pulsa Resolver para ver el desarrollo.</span></div>';
+  derivLines=[];updateDerivButtons();
+  textOut.classList.remove('show');
+  editor.focus();paint();
+}
+document.getElementById('genBtn').addEventListener('click',()=>{
+  const lvl=document.getElementById('level').value;
+  loadTokens(genLevel(lvl));
+  announce('Ejercicio de nivel '+lvl+' cargado en el editor.');
+});
+
+/* ===================== CÁLCULO Y SALIDA ===================== */
+function buildExpression(){
+  const parts=[];
+  for(const ch of editor.children){
+    const t=ch.dataset.type;
+    if(t==='int'){let v=ch.querySelector('input').value;if(v===''||v==='-')v='0';parts.push(v);}
+    else if(t==='frac'){let n=ch.querySelector('.num').value,d=ch.querySelector('.den').value;if(n===''||n==='-')n='0';if(d===''||d==='-')d='1';parts.push(`${n}/${d}`);}
+    else if(t==='exp'){let v=ch.querySelector('input').value;parts.push('^');if(v!==''&&v!=='-')parts.push(v);}
+    else if(t==='op')parts.push(ch.dataset.val);
+    else if(t==='paren')parts.push(ch.dataset.val);
+  }
+  return parts.join(' ');
+}
+function displayExpr(e){return e.replace(/ \* /g,' · ').replace(/ \/ /g,' : ').replace(/ - /g,' − ');}
+
+function fracBig(n,d){
+  if(d===1)return `<span class="big-int">${n}</span>`;
+  const neg=n<0,an=Math.abs(n);
+  return `<span class="big-frac">${neg?'<span class="big-sign">−</span>':''}<span class="bf-stack"><span class="bf-n">${an}</span><span class="bf-bar"></span><span class="bf-d">${d}</span></span></span>`;
+}
+/* decimales con coma (convención RAE) */
+function decHTML(dc){
+  let s=(dc.sign==='-'?'−':'')+dc.whole;
+  if(dc.nonRep||dc.rep){s+=','+dc.nonRep;if(dc.rep)s+=`<span class="rep">${dc.rep}</span>`;}
+  return s;
+}
+function decPlain(dc){
+  let s=(dc.sign==='-'?'-':'')+dc.whole;
+  if(dc.nonRep||dc.rep){s+=','+dc.nonRep;if(dc.rep)s+='('+dc.rep+')';}
+  return s;
+}
+function renderResult(res){
+  const m=mixed(res),dc=decimal(res);
+  let html=`<div class="result-main">${fracBig(res.n,res.d)}</div>`;
+  const extra=[];
+  if(m)extra.push(`<div class="result-line"><span class="rl-label">Número mixto</span> <span class="rl-val">${m.whole<0?'−':''}${Math.abs(m.whole)} <span class="mini-frac"><span>${m.n}</span><span class="mf-bar"></span><span>${m.d}</span></span></span></div>`);
+  if(res.d!==1)extra.push(`<div class="result-line"><span class="rl-label">Decimal</span> <span class="rl-val">${decHTML(dc)}</span></div>`);
+  if(extra.length)html+=`<div class="result-extra">${extra.join('')}</div>`;
+  html+=`<button id="copyBtn" class="mini-btn" type="button">Copiar resultado</button>`;
+  resultEl.innerHTML=html;
+  document.getElementById('copyBtn').addEventListener('click',()=>copyResult(res));
+}
+
+/* ---- desarrollo: render, modo proyección y copia ---- */
+let derivLines=[], shownSteps=0, stepMode=false;
+const stepModeBtn=document.getElementById('stepModeBtn');
+const nextStepBtn=document.getElementById('nextStepBtn');
+const copyDerivBtn=document.getElementById('copyDerivBtn');
+
+function renderDeriv(lines){
+  derivLines=lines;
+  let html='<div class="deriv">';
+  lines.forEach((l,k)=>{
+    const last=k===lines.length-1&&lines.length>1;
+    const notes=(l.notes&&l.notes.length)
+      ?`<span class="note">${l.notes.map(n=>`<span class="nt nt-${n.kind}">${escapeHtml(n.text)}</span>`).join('<span class="nsep">·</span>')}</span>`
+      :'';
+    html+=`<span class="chunk${(stepMode&&k>0)?' veiled':''}" data-k="${k}" style="--k:${stepMode?0:k}">`+
+          (k>0?'<span class="eq">=</span>':'')+
+          `<span class="step"><span class="expr${last?' final':''}">${l.html}</span>${notes}</span>`+
+          `</span>`;
+  });
+  html+='</div>';
+  stepsEl.innerHTML=html;stepsEl.scrollTop=0;
+  shownSteps=stepMode?1:lines.length;
+  updateDerivButtons();
+}
+function updateDerivButtons(){
+  nextStepBtn.disabled=!(stepMode&&derivLines.length>1&&shownSteps<derivLines.length);
+  copyDerivBtn.disabled=derivLines.length===0;
+}
+function revealNext(){
+  if(!(stepMode&&shownSteps<derivLines.length))return;
+  const el=stepsEl.querySelector(`.chunk[data-k="${shownSteps}"]`);
+  if(el)el.classList.remove('veiled');
+  shownSteps++;
+  updateDerivButtons();
+  if(shownSteps===derivLines.length)announce('Desarrollo completo. Resultado: '+(derivLines.length?derivLines[derivLines.length-1].text:''));
+  else announce('Paso '+shownSteps+' de '+derivLines.length+'.');
+}
+stepModeBtn.addEventListener('click',()=>{
+  stepMode=!stepMode;
+  stepModeBtn.setAttribute('aria-pressed',String(stepMode));
+  if(derivLines.length)renderDeriv(derivLines);
+  else updateDerivButtons();
+  announce(stepMode?'Modo paso a paso activado: revela cada igualdad con «Siguiente» o pulsando sobre el desarrollo.':'Modo paso a paso desactivado.');
+});
+nextStepBtn.addEventListener('click',revealNext);
+stepsEl.addEventListener('click',()=>{if(stepMode)revealNext();});
+copyDerivBtn.addEventListener('click',()=>{
+  if(!derivLines.length)return;
+  const txt=derivLines.map((l,k)=>{
+    const nt=(l.notes&&l.notes.length)?'   ← '+l.notes.map(n=>n.text).join('; '):'';
+    return (k===0?'':'= ')+l.text+nt;
+  }).join('\n');
+  copyText(txt,'Desarrollo copiado.');
+});
+
+function showError(expr,msg){
+  stepsEl.innerHTML=`<div class="deriv"><span class="expr mono">${escapeHtml(displayExpr(expr))}</span></div>`;
+  resultEl.innerHTML=`<div class="result-error">${escapeHtml(msg)}</div>`;
+  derivLines=[];updateDerivButtons();
+  announce('Error: '+msg);
+}
+function clearAll(){
+  editor.innerHTML='';selected=null;
+  resultEl.innerHTML='<div class="result-placeholder">—</div>';
+  stepsEl.innerHTML='<div class="deriv"><span class="expr muted">Construye una operación y pulsa Resolver.</span></div>';
+  textOut.classList.remove('show');
+  derivLines=[];updateDerivButtons();
+  editor.focus();announce('Editor limpiado.');
+}
+function compute(){
+  const expr=buildExpression();
+  if(!expr.trim()){
+    resultEl.innerHTML='<div class="result-placeholder">—</div>';
+    stepsEl.innerHTML='<div class="deriv"><span class="expr muted">Construye una operación con los botones de arriba.</span></div>';
+    derivLines=[];updateDerivButtons();
+    return;
+  }
+  /* validación previa: ninguna casilla vacía o incompleta (antes se rellenaban en silencio) */
+  for(const inp of editor.querySelectorAll('input')){
+    if(inp.value===''||inp.value==='-'){
+      showError(expr,'Hay una casilla vacía o incompleta: complétala antes de resolver.');
+      inp.focus();
+      return;
+    }
+  }
+  let out;
+  try{ out=solve(expr); }
+  catch(err){ showError(expr,err.message||String(err)); return; }
+  renderDeriv(out.lines);
+  renderResult(out.final);
+  announce(stepMode?'Desarrollo preparado: revela los pasos con «Siguiente».':'Resultado: '+fmt(out.final));
+}
+function copyResult(res){
+  const m=mixed(res),dc=decimal(res);
+  let txt=fmt(res);
+  if(m)txt+=` = ${m.whole} ${m.n}/${m.d}`;
+  if(res.d!==1)txt+=` = ${decPlain(dc)}`;
+  copyText(txt,'Resultado copiado.');
+}
+function copyText(txt,okMsg){
+  const done=()=>announce(okMsg);
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
+  else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,cb){
+  const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand('copy');}catch(_){}
+  ta.remove();if(cb)cb();
+}
+
+/* init */
+editor.focus();
+</script>
+</body>
+</html>

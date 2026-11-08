@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mundo Decimal · Taller de números decimales</title>
+<style>
+/* ============================================================
+   MUNDO DECIMAL — Taller de números decimales
+   Single-file · sin dependencias externas · offline-first
+   Paleta de la casa: azul/turquesa/ámbar/verde/rojo
+   ============================================================ */
+
+:root{
+  /* color */
+  --tinta:#1F4E79;       /* azul estructural */
+  --tinta-2:#2E6CA4;     /* azul claro */
+  --turquesa:#2A9D8F;
+  --ambar:#E9A23B;
+  --verde:#4C9A2A;
+  --rojo:#E25E4B;
+  --papel:#F5F2EA;       /* fondo cálido tipo papel */
+  --superficie:#FFFFFF;
+  --linea:#E1DCCF;       /* líneas/divisores */
+  --tenue:#6B6A60;       /* texto secundario */
+  --texto:#23221C;       /* texto principal */
+  /* marcadores de comparación */
+  --m1:var(--rojo);
+  --m2:var(--turquesa);
+  --m3:var(--ambar);
+  /* tipografía */
+  --sans:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Code","Consolas","SF Mono",ui-monospace,"Roboto Mono",monospace;
+  --r:14px;              /* radio base */
+  --sombra:0 8px 24px rgba(31,78,121,.10);
+  --sombra-fuerte:0 14px 40px rgba(31,78,121,.18);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:17px}
+body{
+  font-family:var(--sans);
+  color:var(--texto);
+  background:
+    radial-gradient(1200px 500px at 50% -200px, rgba(42,157,143,.10), transparent 60%),
+    var(--papel);
+  min-height:100vh;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:.5px}
+
+/* ---------- Cabecera ---------- */
+.cabecera{
+  background:linear-gradient(115deg,var(--tinta) 0%,var(--tinta-2) 100%);
+  color:#fff;padding:26px 20px 22px;text-align:center;position:relative;overflow:hidden;
+}
+.cabecera::after{ /* regla decorativa: marca de instrumento */
+  content:"";position:absolute;left:0;right:0;bottom:0;height:10px;
+  background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 1px,transparent 1px 14px);
+  opacity:.5;
+}
+.cabecera h1{font-size:1.7rem;font-weight:800;letter-spacing:.3px;display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap}
+.cabecera .lema{margin-top:6px;font-size:.95rem;opacity:.92;font-weight:400}
+
+/* ---------- Navegación por pestañas ---------- */
+.menu{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--linea);
+  display:flex;justify-content:center;flex-wrap:wrap;gap:4px;padding:8px;
+}
+.tab{
+  display:flex;align-items:center;gap:9px;
+  padding:11px 16px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--sans);font-size:.98rem;font-weight:600;color:var(--tenue);
+  border-radius:10px;transition:background .18s,color .18s;
+}
+.tab:hover{background:rgba(42,157,143,.10);color:var(--tinta)}
+.tab.activo{background:var(--tinta);color:#fff}
+.tab.activo svg{stroke:#fff}
+.tab svg{width:20px;height:20px;stroke:var(--tinta);stroke-width:2;fill:none;flex-shrink:0}
+
+main{max-width:980px;margin:0 auto;padding:26px 16px 60px}
+.vista{display:none;animation:aparece .25s ease}
+.vista.activa{display:block}
+@keyframes aparece{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- Componentes comunes ---------- */
+.panel{
+  background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);box-shadow:var(--sombra);padding:22px;margin-bottom:22px;
+}
+.panel-titulo{display:flex;align-items:center;gap:10px;font-size:1.18rem;font-weight:800;color:var(--tinta);margin-bottom:6px}
+.panel-titulo svg{width:22px;height:22px;stroke:var(--turquesa);stroke-width:2;fill:none}
+.panel-sub{color:var(--tenue);font-size:.95rem;margin-bottom:16px}
+
+.barra-entrada{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input.campo{
+  font-family:var(--mono);font-size:1.15rem;font-variant-numeric:tabular-nums;
+  padding:12px 16px;border:2px solid var(--linea);border-radius:10px;
+  width:200px;text-align:center;background:#fff;color:var(--texto);transition:border-color .18s,box-shadow .18s;
+}
+input.campo:focus{outline:none;border-color:var(--turquesa);box-shadow:0 0 0 4px rgba(42,157,143,.18)}
+button.btn{
+  font-family:var(--sans);font-size:1rem;font-weight:700;color:#fff;
+  background:var(--tinta);border:none;border-radius:10px;padding:12px 20px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;transition:transform .12s,background .18s,box-shadow .18s;
+}
+button.btn:hover{background:var(--tinta-2);transform:translateY(-1px)}
+button.btn:active{transform:none}
+button.btn svg{width:18px;height:18px;stroke:#fff;stroke-width:2;fill:none}
+button.btn.sec{background:#fff;color:var(--tinta);border:2px solid var(--linea)}
+button.btn.sec:hover{background:var(--papel);border-color:var(--turquesa)}
+button.btn.sec svg{stroke:var(--tinta)}
+button.btn.fantasma{background:transparent;color:var(--tenue);border:1px dashed var(--linea)}
+button.btn.fantasma:hover{color:var(--tinta);border-color:var(--turquesa);background:transparent}
+
+.ejemplos{margin-top:12px;font-size:.92rem;color:var(--tenue);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{
+  font-family:var(--mono);background:rgba(42,157,143,.12);color:var(--tinta);
+  border:1px solid rgba(42,157,143,.3);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:.9rem;transition:background .15s;
+}
+.chip:hover{background:rgba(42,157,143,.22)}
+.error{color:var(--rojo);font-weight:700;margin-top:12px;min-height:1.4em;font-size:.95rem}
+
+:focus-visible{outline:3px solid var(--ambar);outline-offset:2px;border-radius:6px}
+
+/* leyenda de colores de los órdenes */
+.leyenda{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:.9rem;color:var(--tenue)}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+.punto{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15)}
+
+/* ============================================================
+   RECTA NUMÉRICA (zoom progresivo con conectores)
+   ============================================================ */
+.recta-paso{padding:6px 4px 2px;position:relative}
+.recta-cab{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--tinta);margin-bottom:6px;font-size:1.02rem}
+.recta-cab .insignia{
+  font-family:var(--mono);font-size:.78rem;background:var(--tinta);color:#fff;border-radius:6px;padding:2px 8px;font-weight:700;
+}
+.recta{position:relative;height:78px;margin:4px 0 2px}
+.recta .eje{position:absolute;left:5%;right:5%;top:42px;height:3px;background:linear-gradient(90deg,#cfc8b6,#a59c84);border-radius:2px}
+.recta .eje::after,.recta .eje::before{content:"";position:absolute;top:-4px;width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.recta .eje::before{left:-9px;border-right:9px solid #a59c84}
+.recta .eje::after{right:-9px;border-left:9px solid #a59c84}
+.tick{position:absolute;top:38px;width:2px;height:11px;background:#7a7160;transform:translateX(-50%)}
+.tick-et{position:absolute;top:54px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.78rem;color:#4a463c;white-space:nowrap}
+.seg-activo{position:absolute;top:40px;height:7px;background:rgba(42,157,143,.22);border-radius:3px;pointer-events:none}
+.marcador{position:absolute;top:24px;width:3px;height:34px;background:var(--rojo);transform:translateX(-50%);border-radius:2px;box-shadow:0 0 6px rgba(226,94,75,.5)}
+.marcador-et{position:absolute;top:-2px;left:50%;transform:translateX(-50%);background:var(--rojo);color:#fff;font-family:var(--mono);font-weight:700;font-size:.82rem;padding:3px 9px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 8px rgba(226,94,75,.35)}
+.conector{display:block;width:100%;height:26px;margin:-2px 0 -4px}
+
+/* comparador */
+.comp-recta{position:relative;height:128px;background:var(--papel);border:1px solid var(--linea);border-radius:12px;margin-top:14px}
+.comp-recta .eje{position:absolute;left:5%;right:5%;top:92px;height:3px;background:linear-gradient(90deg,#cfc8b6,#a59c84);border-radius:2px}
+.comp-recta .eje::before,.comp-recta .eje::after{content:"";position:absolute;top:-4px;width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.comp-recta .eje::before{left:-9px;border-right:9px solid #a59c84}
+.comp-recta .eje::after{right:-9px;border-left:9px solid #a59c84}
+.comp-recta .tick{top:86px;height:13px}
+.comp-recta .tick.menor{top:89px;height:7px;width:1px;background:#b3a98f}
+.comp-recta .tick-et{top:104px}
+.comp-marca{position:absolute;top:66px;width:4px;height:30px;transform:translateX(-50%);border-radius:2px;box-shadow:0 0 5px rgba(0,0,0,.25)}
+.comp-marca.m1{background:var(--m1)} .comp-marca.m2{background:var(--m2)} .comp-marca.m3{background:var(--m3)}
+.comp-et{position:absolute;left:50%;transform:translateX(-50%);font-family:var(--mono);font-weight:700;font-size:.82rem;color:#fff;padding:3px 8px;border-radius:8px;white-space:nowrap;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.comp-et.m1{background:var(--m1)} .comp-et.m2{background:var(--m2)} .comp-et.m3{background:var(--m3)}
+
+/* tabla de comparación por valor posicional */
+.comp-detalle{margin-top:16px}
+.cmp-tit{font-size:.82rem;color:var(--tenue);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.cmp-tabla-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cmp-tabla{border-collapse:collapse;margin:0 auto;font-family:var(--mono)}
+.cmp-tabla th{font-family:var(--sans);font-size:.7rem;font-weight:700;color:var(--tenue);text-transform:uppercase;letter-spacing:.4px;padding:4px 0 6px;text-align:center}
+.cmp-tabla th.col-ent{color:var(--tinta)} .cmp-tabla th.col-dec{color:var(--verde)}
+.cmp-tabla td{width:34px;height:38px;text-align:center;font-size:1.12rem;font-weight:700;color:var(--tinta);
+  border:1px solid var(--linea);background:#fff}
+.cmp-tabla td.coma{width:18px;border:none;background:transparent;color:var(--tinta);font-size:1.3rem;vertical-align:bottom}
+.cmp-tabla td.pad{color:#c9c2b2}                         /* cero de relleno */
+.cmp-tabla td.dec{background:#f3f8ef}
+.cmp-tabla td.decide{background:var(--ambar);color:#fff;border-color:var(--ambar)}
+.cmp-tabla .et-num{font-family:var(--mono);font-weight:700;font-size:.86rem;padding-right:10px;text-align:right;color:#fff;border:none;background:transparent;width:auto}
+.cmp-tabla .chip-num{display:inline-block;padding:2px 8px;border-radius:7px;color:#fff}
+.cmp-tabla .chip-num.m1{background:var(--m1)} .cmp-tabla .chip-num.m2{background:var(--m2)} .cmp-tabla .chip-num.m3{background:var(--m3)}
+.cmp-expl{margin-top:12px;display:grid;gap:8px}
+.cmp-paso{display:flex;gap:9px;align-items:flex-start;font-size:.92rem;color:#4a463c;
+  background:rgba(31,78,121,.05);border:1px solid rgba(31,78,121,.14);border-radius:9px;padding:9px 12px}
+.cmp-paso .lt{font-family:var(--mono);font-weight:700;color:var(--tinta);white-space:nowrap}
+.cmp-paso b{color:var(--tinta)}
+.cmp-paso .mk{font-family:var(--mono);font-weight:700;color:var(--ambar-deep,#b9791f)}
+.resultado-orden{
+  margin-top:16px;padding:16px;border-radius:12px;text-align:center;
+  background:rgba(31,78,121,.06);border:1px solid rgba(31,78,121,.18);
+}
+.resultado-orden .titulo{font-size:.9rem;color:var(--tenue);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.resultado-orden .secuencia{font-family:var(--mono);font-size:1.35rem;font-weight:700;color:var(--tinta)}
+.resultado-orden .secuencia .op{color:var(--turquesa);margin:0 6px}
+
+/* ============================================================
+   CUADROS / REPRESENTACIÓN (modelo de áreas)
+   ============================================================ */
+.rejilla-tarjetas{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.tarjeta{
+  background:#fff;border:1px solid var(--linea);border-radius:16px;padding:18px;
+  box-shadow:var(--sombra);text-align:center;cursor:pointer;
+  transition:transform .2s,box-shadow .2s,border-color .2s;width:200px;
+}
+.tarjeta:hover,.tarjeta:focus-visible{transform:translateY(-6px);box-shadow:var(--sombra-fuerte);border-color:var(--turquesa)}
+.tarjeta-tit{font-size:1.05rem;font-weight:800;color:var(--tinta);margin-bottom:4px;letter-spacing:.3px}
+.tarjeta-orden{font-size:.78rem;color:var(--tenue);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.lienzo{width:160px;height:160px;margin:0 auto 12px;box-shadow:0 4px 14px rgba(0,0,0,.10);border-radius:6px;overflow:hidden}
+.formula{font-size:.92rem;color:#4a463c;line-height:1.55}
+.resalte{color:var(--turquesa);font-weight:800;font-family:var(--mono)}
+.lupa-pista{font-size:.78rem;color:var(--tenue);margin-top:8px;display:flex;align-items:center;gap:5px;justify-content:center}
+.lupa-pista svg{width:14px;height:14px;stroke:var(--tenue);stroke-width:2;fill:none}
+
+/* representación de los cuadrados */
+.cuadro{width:100%;height:100%;background:#fff;border:2px solid var(--texto)}
+.cuadro.lleno{background:var(--verde)}
+.rej{display:grid;width:100%;height:100%;border:2px solid var(--texto);background:#fff}
+.rej-10{grid-template-columns:repeat(10,1fr)}
+.rej-100{grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(10,1fr)}
+.celda{box-sizing:border-box;border:.75px solid rgba(31,78,121,.42);background:#fff}
+.celda.lleno{background:var(--verde);border-color:rgba(15,40,66,.6)}
+/* milésimas: cada centésima se parte a su vez en 10 milésimas IGUALES (2×5) */
+.rej-mil{grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(10,1fr)}
+.cmil{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(2,1fr);
+  box-sizing:border-box;border:.9px solid rgba(15,40,66,.55)}
+.smil{box-sizing:border-box;border:.4px solid rgba(31,78,121,.28);background:#fff}
+.smil.on{background:var(--verde)}
+
+/* unidades múltiples en el modelo: rejilla que se ajusta sola a la caja */
+.unidades-fila{display:grid;gap:6px;place-content:center;justify-items:center;width:100%;height:100%;padding:6px;box-sizing:border-box}
+.mini-unidad{background:var(--verde);border:2px solid var(--texto);border-radius:3px;width:100%;aspect-ratio:1;min-width:0;max-width:100%}
+.unidades-fila.densa{gap:3px}
+.unidades-fila.densa .mini-unidad{border-width:1px;border-radius:2px}
+.unidades-fila.muy-densa{gap:2px}
+.unidades-fila.muy-densa .mini-unidad{border-width:.5px;border-radius:1px}
+
+/* resumen lectura/valor dentro de Representación */
+.resumen{display:grid;gap:14px;margin-top:8px}
+.resumen .fila{background:var(--papel);border:1px solid var(--linea);border-radius:12px;padding:14px 16px}
+.resumen .fila .etq{font-size:.8rem;text-transform:uppercase;letter-spacing:.6px;color:var(--tenue);font-weight:700;margin-bottom:4px}
+.resumen .fila .val{font-size:1.05rem}
+.resumen .fila .val.num{font-size:1.15rem;color:var(--tinta)}
+
+/* ============================================================
+   VALOR POSICIONAL
+   ============================================================ */
+.tvp{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+.tvp table{border-collapse:collapse;margin:0 auto;min-width:max-content}
+.tvp th,.tvp td{border:1px solid var(--linea);text-align:center;padding:0}
+.tvp .abrev{font-weight:800;font-size:1.05rem;color:#fff;padding:8px 14px;font-family:var(--mono)}
+.tvp .nombre{font-size:.72rem;color:var(--tenue);padding:5px 8px;background:var(--papel);white-space:nowrap}
+.tvp .digito{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:2rem;font-weight:700;padding:14px 18px;background:#fff;color:#cfcabb}
+.tvp .digito.activo{color:var(--tinta)}
+.col-ent .abrev{background:var(--tinta)}
+.col-dec .abrev{background:var(--turquesa)}
+.tvp .coma{border:none;background:transparent}
+.tvp .coma .abrev{background:transparent;color:var(--rojo);font-size:2rem;padding:0 6px;vertical-align:bottom}
+.tvp .coma .digito{background:transparent;color:var(--rojo);font-size:2.4rem;font-weight:800}
+
+.bloques-desc{display:grid;gap:14px;margin-top:6px}
+.desc-caja{background:var(--papel);border:1px solid var(--linea);border-radius:12px;padding:14px 16px}
+.desc-caja .etq{font-size:.8rem;text-transform:uppercase;letter-spacing:.6px;color:var(--tenue);font-weight:700;margin-bottom:6px}
+.desc-caja .cuerpo{font-family:var(--mono);font-size:1.05rem;color:var(--tinta);line-height:1.7;word-break:break-word}
+.desc-caja .cuerpo .mas{color:var(--turquesa);font-weight:700}
+.frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 3px;line-height:1.05}
+.frac .arr{border-bottom:2px solid currentColor;padding:0 4px}
+.frac .aba{padding:0 4px}
+.nota-equiv{display:flex;gap:10px;align-items:flex-start;background:rgba(233,162,59,.12);border:1px solid rgba(233,162,59,.4);border-radius:12px;padding:12px 14px;margin-top:6px;font-size:.92rem;color:#7a5a18}
+.nota-equiv svg{width:20px;height:20px;stroke:var(--ambar);stroke-width:2;fill:none;flex-shrink:0;margin-top:1px}
+
+/* ============================================================
+   CONCEPTOS (tarjetas de referencia)
+   ============================================================ */
+.con-intro{text-align:center;color:var(--tenue);margin-bottom:20px;max-width:620px;margin-left:auto;margin-right:auto}
+
+/* ============================================================
+   MODAL (pantalla completa)
+   ============================================================ */
+.modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(20,25,30,.92);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;animation:aparece .2s ease}
+.modal.activo{display:flex}
+.modal-caja{position:relative;display:flex;flex-direction:column;align-items:center;max-width:760px;width:100%}
+.modal-tit{color:#fff;font-size:1.8rem;font-weight:800;margin-bottom:18px;letter-spacing:.5px;text-align:center}
+.modal-lienzo{width:min(72vmin,520px);height:min(72vmin,520px);box-shadow:0 20px 60px rgba(0,0,0,.5);border-radius:8px;overflow:hidden;flex-shrink:0}
+.modal-info{margin-top:18px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:18px 24px;color:#fff;text-align:center;font-size:1.05rem;line-height:1.65;max-width:600px}
+.modal-info .resalte{color:#7fe0c8}
+.cerrar{position:absolute;top:-8px;right:-8px;width:46px;height:46px;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:rgba(255,255,255,.12);color:#fff;font-size:1.4rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .25s,background .2s}
+.cerrar:hover{background:rgba(255,255,255,.25);transform:rotate(90deg)}
+@media (max-width:560px){.cerrar{top:0;right:0}}
+
+/* ============================================================
+   EFECTOS INFOGRÁFICOS
+   ============================================================ */
+@keyframes llena{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.celda.lleno,.smil.on,.mini-unidad{animation:llena .35s cubic-bezier(.2,.8,.3,1.1) both}
+@keyframes cae{0%{transform:translateX(-50%) translateY(-18px);opacity:0}60%{transform:translateX(-50%) translateY(3px)}100%{transform:translateX(-50%) translateY(0);opacity:1}}
+.marcador,.marcador-et,.comp-marca,.comp-et{animation:cae .45s ease-out both}
+@keyframes barre{from{width:0}to{}}
+.seg-activo{animation:barre .5s ease-out both}
+@keyframes brota{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.recta-paso,.cmp-paso,.desc-caja,.resumen .fila{animation:brota .4s ease both}
+.recta-paso:nth-child(3){animation-delay:.12s}
+.recta-paso:nth-child(5){animation-delay:.24s}
+.recta-paso:nth-child(7){animation-delay:.36s}
+.tvp .digito.activo{animation:llena .4s cubic-bezier(.2,.8,.3,1.1) both}
+
+/* ============================================================
+   REDONDEO
+   ============================================================ */
+.red-opciones{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.red-opciones .etq-sel{font-size:.92rem;color:var(--tenue);font-weight:600}
+.selector{display:inline-flex;border:2px solid var(--linea);border-radius:10px;overflow:hidden}
+.selector button{font-family:var(--sans);font-size:.92rem;font-weight:700;border:none;background:#fff;color:var(--tenue);padding:10px 14px;cursor:pointer;transition:background .15s,color .15s}
+.selector button+button{border-left:1px solid var(--linea)}
+.selector button.on{background:var(--turquesa);color:#fff}
+.red-recta{position:relative;height:120px;background:var(--papel);border:1px solid var(--linea);border-radius:12px;margin-top:16px}
+.red-recta .eje{position:absolute;left:6%;right:6%;top:74px;height:3px;background:linear-gradient(90deg,#cfc8b6,#a59c84);border-radius:2px}
+.red-cand{position:absolute;top:48px;width:3px;height:34px;background:var(--tinta);transform:translateX(-50%);border-radius:2px}
+.red-cand-et{position:absolute;top:88px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-weight:700;font-size:.86rem;color:var(--tinta);white-space:nowrap}
+.red-cand.gana{background:var(--verde);box-shadow:0 0 8px rgba(76,154,42,.6)}
+.red-medio{position:absolute;top:54px;width:2px;height:26px;background:var(--rojo);transform:translateX(-50%);opacity:.55}
+.red-medio-et{position:absolute;top:30px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.72rem;color:var(--rojo);white-space:nowrap;opacity:.8}
+.red-marca{position:absolute;top:36px;width:3px;height:46px;background:var(--rojo);transform:translateX(-50%);border-radius:2px;animation:cae .45s ease-out both}
+.red-marca-et{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:var(--rojo);color:#fff;font-family:var(--mono);font-weight:700;font-size:.82rem;padding:3px 9px;border-radius:8px;white-space:nowrap;animation:cae .45s ease-out both}
+.red-arco{position:absolute;top:64px;height:8px;border:2px solid var(--turquesa);border-bottom:none;border-radius:8px 8px 0 0;opacity:.8}
+.red-regla{margin-top:16px;display:grid;gap:10px}
+.red-paso{display:flex;gap:10px;align-items:flex-start;background:rgba(31,78,121,.05);border:1px solid rgba(31,78,121,.14);border-radius:10px;padding:11px 14px;font-size:.95rem;animation:brota .4s ease both}
+.red-paso .n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--tinta);color:#fff;font-weight:800;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+.red-paso b{color:var(--tinta)}
+.red-paso .cifra-clave{display:inline-block;font-family:var(--mono);font-weight:800;background:var(--ambar);color:#fff;border-radius:6px;padding:1px 8px}
+.red-final{margin-top:14px;padding:16px;border-radius:12px;text-align:center;background:rgba(76,154,42,.08);border:1px solid rgba(76,154,42,.35)}
+.red-final .titulo{font-size:.85rem;color:var(--tenue);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.red-final .valor{font-family:var(--mono);font-size:1.6rem;font-weight:800;color:var(--verde)}
+
+/* ============================================================
+   PRÁCTICA
+   ============================================================ */
+.marcadores{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.marcador-caja{flex:1;min-width:110px;background:var(--papel);border:1px solid var(--linea);border-radius:12px;padding:12px;text-align:center}
+.marcador-caja .cifra{font-family:var(--mono);font-size:1.5rem;font-weight:800;color:var(--tinta)}
+.marcador-caja .etq{font-size:.74rem;text-transform:uppercase;letter-spacing:.5px;color:var(--tenue);font-weight:700}
+.marcador-caja.racha .cifra{color:var(--ambar)}
+.pregunta{background:var(--papel);border:1px solid var(--linea);border-radius:12px;padding:18px;margin-bottom:14px;animation:brota .35s ease both}
+.pregunta .tipo{font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--turquesa);margin-bottom:8px}
+.pregunta .enunciado{font-size:1.08rem;line-height:1.6}
+.pregunta .enunciado .num{color:var(--tinta);font-weight:700;font-size:1.15rem}
+.respuestas{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.resp-op{font-family:var(--sans);font-size:.98rem;font-weight:600;background:#fff;color:var(--texto);border:2px solid var(--linea);border-radius:10px;padding:11px 18px;cursor:pointer;transition:border-color .15s,transform .12s}
+.resp-op:hover{border-color:var(--turquesa);transform:translateY(-1px)}
+.resp-op.num{font-family:var(--mono);font-size:1.05rem}
+.resp-op.ok{background:var(--verde);border-color:var(--verde);color:#fff;animation:pulsoOK .5s ease}
+.resp-op.mal{background:var(--rojo);border-color:var(--rojo);color:#fff;animation:tiembla .4s ease}
+.resp-op:disabled{cursor:default;opacity:.85}
+@keyframes pulsoOK{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes tiembla{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.feedback{margin-top:14px;border-radius:10px;padding:13px 16px;font-size:.95rem;display:none;animation:brota .3s ease both}
+.feedback.ok{display:block;background:rgba(76,154,42,.10);border:1px solid rgba(76,154,42,.4);color:#2c5d17}
+.feedback.mal{display:block;background:rgba(226,94,75,.10);border:1px solid rgba(226,94,75,.4);color:#8f2f21}
+.feedback b{font-family:var(--mono)}
+
+/* ---------- responsivo ---------- */
+@media (max-width:680px){
+  html{font-size:16px}
+  .cabecera h1{font-size:1.35rem}
+  input.campo{width:100%;max-width:280px}
+  .barra-entrada{flex-direction:column;align-items:stretch}
+  .barra-entrada .campo,.barra-entrada .btn{width:100%}
+  .tab span{display:none} /* en móvil, solo iconos */
+  .tab{padding:11px 14px}
+  .lienzo{width:130px;height:130px}
+  .tarjeta{width:150px}
+}
+
+/* ---------- afinado de etiquetas de la recta solo en móvil estrecho ---------- */
+@media (max-width:480px){
+  .recta-paso .tick-et{font-size:.66rem}
+  .recta-paso .tick-et.et-alt{display:none}
+}
+
+/* ---------- impresión ---------- */
+@media print{
+  .menu,.barra-entrada,.cabecera::after,.lupa-pista,.no-print,button{display:none!important}
+  body{background:#fff}
+  .vista:not(.activa){display:none}
+  .panel{box-shadow:none;border-color:#bbb;break-inside:avoid}
+  .tarjeta{box-shadow:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="cabecera">
+  <h1>
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="1.5"/><path d="M6 7v4M10 7v6M14 7v4M18 7v6"/></svg>
+    Mundo Decimal
+  </h1>
+  <div class="lema">Taller visual de números decimales · unidades, décimas, centésimas y milésimas</div>
+</header>
+
+<nav class="menu" id="menu">
+  <button class="tab activo" data-vista="v-conceptos" onclick="irA('v-conceptos')">
+    <svg viewBox="0 0 24 24"><path d="M4 5h10a3 3 0 0 1 3 3v11a3 3 0 0 0-3-3H4z"/><path d="M20 5h-3a3 3 0 0 0-3 3v8"/></svg><span>Conceptos</span>
+  </button>
+  <button class="tab" data-vista="v-representacion" onclick="irA('v-representacion')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg><span>Representación</span>
+  </button>
+  <button class="tab" data-vista="v-valor" onclick="irA('v-valor')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16M15 4v16"/></svg><span>Valor posicional</span>
+  </button>
+  <button class="tab" data-vista="v-recta" onclick="irA('v-recta')">
+    <svg viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M5 9v6M9 9v6M13 9v6M17 9v6"/></svg><span>Recta numérica</span>
+  </button>
+  <button class="tab" data-vista="v-redondeo" onclick="irA('v-redondeo')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span>Redondeo</span>
+  </button>
+  <button class="tab" data-vista="v-practica" onclick="irA('v-practica')">
+    <svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg><span>Práctica</span>
+  </button>
+</nav>
+
+<main>
+
+  <!-- ============ CONCEPTOS ============ -->
+  <section id="v-conceptos" class="vista activa">
+    <div class="panel">
+      <div class="panel-titulo">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>
+        ¿Qué es cada orden decimal?
+      </div>
+      <p class="con-intro">La <b>unidad</b> es un todo. Si la partimos en 10 partes iguales obtenemos las <b>décimas</b>; si partimos <b>cada décima</b> en 10, las <b>centésimas</b>; y si partimos <b>cada centésima</b> en 10, las <b>milésimas</b>. Cada nivel se divide a su vez en diez. Toca cada cuadro para verlo en grande.</p>
+      <div class="rejilla-tarjetas" id="con-tarjetas"></div>
+      <div class="nota-equiv" style="margin-top:22px">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <div>Cada orden vale <b>10 veces menos</b> que el anterior: 1 unidad = 10 décimas = 100 centésimas = 1000 milésimas. Por eso <span class="num">0,1 = 0,10 = 0,100</span> representan lo mismo.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REPRESENTACIÓN ============ -->
+  <section id="v-representacion" class="vista">
+    <div class="panel">
+      <div class="panel-titulo">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+        Representa un decimal con cuadros
+      </div>
+      <p class="panel-sub">Escribe un número (con coma o punto) y descúbrelo dibujado: cada orden ocupa su propio cuadro coloreado.</p>
+      <div class="barra-entrada">
+        <input class="campo" id="rep-input" inputmode="decimal" placeholder="2,875" aria-label="Número decimal" />
+        <button class="btn" onclick="repRender()"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Representar</button>
+        <button class="btn sec" onclick="repLimpiar()">Limpiar</button>
+        <button class="btn fantasma no-print" onclick="window.print()"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4v-5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5h-2M8 14h8v6H8z"/></svg> Imprimir</button>
+      </div>
+      <div class="ejemplos">Prueba: <span class="chip" onclick="repEjemplo('0,4')">0,4</span><span class="chip" onclick="repEjemplo('1,25')">1,25</span><span class="chip" onclick="repEjemplo('2,875')">2,875</span><span class="chip" onclick="repEjemplo('3,06')">3,06</span></div>
+      <div class="error" id="rep-error"></div>
+      <div class="leyenda"><span><i class="punto" style="background:var(--verde)"></i> parte coloreada = el valor</span><span><i class="punto" style="background:#fff;border-color:#999"></i> parte vacía</span></div>
+    </div>
+
+    <div class="panel" id="rep-salida-panel" style="display:none">
+      <div class="rejilla-tarjetas" id="rep-tarjetas"></div>
+      <div class="resumen" id="rep-resumen" style="margin-top:22px"></div>
+    </div>
+  </section>
+
+  <!-- ============ VALOR POSICIONAL ============ -->
+  <section id="v-valor" class="vista">
+    <div class="panel">
+      <div class="panel-titulo">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16M15 4v16"/></svg>
+        Lee y descompón el número
+      </div>
+      <p class="panel-sub">Coloca el número en la tabla de valor posicional y obtén su lectura, su descomposición y sus fracciones.</p>
+      <div class="barra-entrada">
+        <input class="campo" id="vp-input" inputmode="decimal" placeholder="2,875" aria-label="Número decimal" />
+        <button class="btn" onclick="vpRender()"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Analizar</button>
+        <button class="btn fantasma no-print" onclick="window.print()"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4v-5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5h-2M8 14h8v6H8z"/></svg> Imprimir</button>
+      </div>
+      <div class="ejemplos">Prueba: <span class="chip" onclick="vpEjemplo('2,875')">2,875</span><span class="chip" onclick="vpEjemplo('14,5')">14,5</span><span class="chip" onclick="vpEjemplo('305,07')">305,07</span><span class="chip" onclick="vpEjemplo('0,206')">0,206</span></div>
+      <div class="error" id="vp-error"></div>
+    </div>
+
+    <div class="panel" id="vp-salida" style="display:none">
+      <div class="panel-titulo" style="font-size:1rem"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg> Tabla de valor posicional</div>
+      <div class="tvp" id="vp-tabla"></div>
+      <div class="resumen" id="vp-lectura" style="margin-top:20px"></div>
+      <div class="bloques-desc" id="vp-desc" style="margin-top:18px"></div>
+    </div>
+  </section>
+
+  <!-- ============ RECTA NUMÉRICA ============ -->
+  <section id="v-recta" class="vista">
+    <div class="panel">
+      <div class="panel-titulo">
+        <svg viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M5 9v6M9 9v6M13 9v6M17 9v6"/></svg>
+        Ubica el número y haz zoom
+      </div>
+      <p class="panel-sub">Cada recta es una <b>ampliación</b> de la anterior: el corchete turquesa muestra qué tramo estamos mirando con lupa.</p>
+      <div class="barra-entrada">
+        <input class="campo" id="rec-input" inputmode="decimal" placeholder="1,376" aria-label="Número decimal" />
+        <button class="btn" onclick="recUbicar()"><svg viewBox="0 0 24 24"><path d="M12 21s-7-5.7-7-11a7 7 0 0 1 14 0c0 5.3-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg> Ubicar</button>
+        <button class="btn sec" onclick="recToggleComp()"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 7l7-4 7 4M5 7l-3 6h6zM19 7l-3 6h6z"/></svg> Comparar números</button>
+        <button class="btn fantasma no-print" onclick="window.print()"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4v-5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5h-2M8 14h8v6H8z"/></svg> Imprimir</button>
+      </div>
+      <div class="ejemplos">Prueba: <span class="chip" onclick="recEjemplo('1,376')">1,376</span><span class="chip" onclick="recEjemplo('-2,5')">-2,5</span><span class="chip" onclick="recEjemplo('3,141')">3,141</span><span class="chip" onclick="recEjemplo('0,08')">0,08</span></div>
+      <div class="error" id="rec-error"></div>
+    </div>
+
+    <div class="panel" id="rec-zoom" style="display:none"></div>
+
+    <div class="panel" id="rec-comp" style="display:none">
+      <div class="panel-titulo"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 7l7-4 7 4"/></svg> Comparador de decimales</div>
+      <p class="panel-sub">Introduce hasta 3 números. Verás su posición en la recta, la comparación cifra a cifra por valor posicional y el orden de menor a mayor.</p>
+      <div class="barra-entrada">
+        <input class="campo" id="c1" inputmode="decimal" placeholder="nº 1" style="width:140px;border-color:var(--m1)">
+        <input class="campo" id="c2" inputmode="decimal" placeholder="nº 2" style="width:140px;border-color:var(--m2)">
+        <input class="campo" id="c3" inputmode="decimal" placeholder="nº 3" style="width:140px;border-color:var(--m3)">
+        <button class="btn" onclick="recComparar()"><svg viewBox="0 0 24 24"><path d="M3 6h13M3 12h9M3 18h5M18 8v10M18 18l3-3M18 18l-3-3"/></svg> Comparar</button>
+      </div>
+      <div class="error" id="c-error"></div>
+      <div class="comp-recta" id="c-recta" style="display:none"><div class="eje"></div></div>
+      <div class="comp-detalle" id="c-detalle" style="display:none"></div>
+      <div class="resultado-orden" id="c-resultado" style="display:none"></div>
+    </div>
+  </section>
+
+  <!-- ============ REDONDEO ============ -->
+  <section id="v-redondeo" class="vista">
+    <div class="panel">
+      <div class="panel-titulo">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        Redondea a un orden
+      </div>
+      <p class="panel-sub">Redondear es sustituir un número por el valor <b>más cercano</b> del orden elegido. La recta muestra los dos candidatos y a cuál está más cerca tu número.</p>
+      <div class="barra-entrada">
+        <input class="campo" id="red-input" inputmode="decimal" placeholder="2,875" aria-label="Número decimal" />
+        <div class="red-opciones">
+          <span class="etq-sel">Redondear a la</span>
+          <div class="selector" id="red-selector">
+            <button class="on" data-ord="0">unidad</button>
+            <button data-ord="1">décima</button>
+            <button data-ord="2">centésima</button>
+          </div>
+        </div>
+        <button class="btn" onclick="redRender()"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Redondear</button>
+      </div>
+      <div class="ejemplos">Prueba: <span class="chip" onclick="redEjemplo('2,875')">2,875</span><span class="chip" onclick="redEjemplo('3,45')">3,45</span><span class="chip" onclick="redEjemplo('0,96')">0,96</span><span class="chip" onclick="redEjemplo('7,05')">7,05</span></div>
+      <div class="error" id="red-error"></div>
+    </div>
+    <div class="panel" id="red-salida" style="display:none">
+      <div class="red-recta" id="red-recta"></div>
+      <div class="red-regla" id="red-regla"></div>
+      <div class="red-final" id="red-final"></div>
+    </div>
+  </section>
+
+  <!-- ============ PRÁCTICA ============ -->
+  <section id="v-practica" class="vista">
+    <div class="panel">
+      <div class="panel-titulo">
+        <svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+        Ponte a prueba
+      </div>
+      <p class="panel-sub">Ejercicios de lectura, escritura, comparación y redondeo generados al azar, con corrección inmediata.</p>
+      <div class="marcadores">
+        <div class="marcador-caja"><div class="cifra" id="pr-aciertos">0</div><div class="etq">Aciertos</div></div>
+        <div class="marcador-caja"><div class="cifra" id="pr-total">0</div><div class="etq">Preguntas</div></div>
+        <div class="marcador-caja racha"><div class="cifra" id="pr-racha">0</div><div class="etq">Racha</div></div>
+      </div>
+      <div id="pr-zona"></div>
+      <div class="barra-entrada" style="margin-top:14px">
+        <button class="btn" onclick="prNueva()"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg> Nueva pregunta</button>
+        <button class="btn fantasma" onclick="prReiniciar()">Reiniciar marcador</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- modal único reutilizable -->
+<div class="modal" id="modal" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal-caja">
+    <button class="cerrar" onclick="cerrarModal()" aria-label="Cerrar">✕</button>
+    <div class="modal-tit" id="modal-tit"></div>
+    <div class="modal-lienzo" id="modal-lienzo"></div>
+    <div class="modal-info" id="modal-info"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ===================================================================
+   UTILIDADES COMUNES
+   =================================================================== */
+function parseDecimal(s){
+  if(s==null) return NaN;
+  const limpio=String(s).trim().replace(/\s/g,'').replace(',', '.');
+  if(limpio==='' || !/^-?\d*\.?\d+$/.test(limpio)) return NaN;
+  return parseFloat(limpio);
+}
+function fmt(n,dmin,dmax){
+  return n.toLocaleString('es-ES',{minimumFractionDigits:dmin??0,maximumFractionDigits:dmax??3});
+}
+function irA(id){
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('activo'));
+  document.getElementById(id).classList.add('activa');
+  document.querySelector('.tab[data-vista="'+id+'"]').classList.add('activo');
+  window.scrollTo({top:0,behavior:'auto'});
+}
+function cerrarModal(){document.getElementById('modal').classList.remove('activo');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarModal();});
+
+/* descompone un valor >=0 en dígitos de cada orden */
+function ordenes(num){
+  const v=Math.round(Math.abs(num)*1000)/1000;
+  const entero=Math.floor(v);
+  const totalMil=Math.round((v-entero)*1000);
+  return {
+    entero,
+    decimas:Math.floor(totalMil/100),
+    centesimas:Math.floor((totalMil%100)/10),
+    milesimas:totalMil%10,
+    totalMil
+  };
+}
+
+/* ===================================================================
+   NÚMEROS EN PALABRAS (español, con concordancia de género)
+   =================================================================== */
+const _UNI=['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve','veinte','veintiuno','veintidós','veintitrés','veinticuatro','veinticinco','veintiséis','veintisiete','veintiocho','veintinueve'];
+const _DEC=['','','','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+const _CEN=['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+
+function _unidad(n,fem,apoc){
+  if(n===1){ if(apoc) return 'un'; return fem?'una':'uno'; }
+  if(n===21){ if(apoc) return 'veintiún'; return fem?'veintiuna':'veintiuno'; }
+  return _UNI[n];
+}
+function _decenas(n,fem,apoc){ // 0..99
+  if(n<30) return _unidad(n,fem,apoc);
+  const d=Math.floor(n/10), u=n%10;
+  if(u===0) return _DEC[d];
+  return _DEC[d]+' y '+_unidad(u,fem,apoc);
+}
+function _centenas(n,fem,apoc){ // 0..999
+  if(n===0) return '';
+  if(n===100) return 'cien';
+  const c=Math.floor(n/100), r=n%100;
+  let s='';
+  if(c>0){
+    let pal=_CEN[c];
+    if(fem) pal=pal.replace('cientos','cientas').replace('quinientos','quinientas');
+    s=pal;
+  }
+  if(r>0) s=(s?s+' ':'')+_decenas(r,fem,apoc);
+  return s;
+}
+function enteroPalabras(n,fem){ // 0..999999
+  n=Math.floor(Math.abs(n));
+  if(n===0) return 'cero';
+  if(n<1000) return _centenas(n,fem,false);
+  const miles=Math.floor(n/1000), resto=n%1000;
+  let s;
+  if(miles===1) s='mil';
+  else s=_centenas(miles,fem,true)+' mil';
+  if(resto>0) s+=' '+_centenas(resto,fem,false);
+  return s;
+}
+
+/* lectura por valor posicional (parte fraccionaria en femenino) */
+function lecturaPosicional(num){
+  const neg=num<0;
+  const o=ordenes(num);
+  const partes=[];
+  if(o.entero>0){
+    partes.push(enteroPalabras(o.entero,true)+(o.entero===1?' unidad':' unidades'));
+  }
+  if(o.totalMil>0){
+    let val,unidad;
+    if(o.totalMil%100===0){ val=o.totalMil/100; unidad=val===1?'décima':'décimas'; }
+    else if(o.totalMil%10===0){ val=o.totalMil/10; unidad=val===1?'centésima':'centésimas'; }
+    else { val=o.totalMil; unidad=val===1?'milésima':'milésimas'; }
+    partes.push(enteroPalabras(val,true)+' '+unidad);
+  }
+  if(partes.length===0) partes.push('cero unidades');
+  return (neg?'menos ':'')+partes.join(' y ');
+}
+
+/* lectura "con coma" */
+function lecturaComa(num){
+  const neg=num<0;
+  const o=ordenes(num);
+  let s=enteroPalabras(o.entero,false);
+  if(o.totalMil>0){
+    const dig=String(o.totalMil).padStart(3,'0').replace(/0+$/,'')||'0';
+    let decTxt;
+    if(dig[0]==='0'){ // hay cero a la izquierda: leemos cifra a cifra
+      decTxt=dig.split('').map(d=>_UNI[+d]).join(' ');
+    } else {
+      decTxt=_centenas(parseInt(dig,10),false,false);
+    }
+    s+=' coma '+decTxt;
+  }
+  return (neg?'menos ':'')+s;
+}
+
+/* ===================================================================
+   CONSTRUCCIÓN DE REJILLAS
+   =================================================================== */
+// Dibuja n unidades completas en una rejilla que SIEMPRE cabe en la caja.
+// cols=ceil(sqrt(n)) garantiza filas<=columnas, así nunca desborda en alto.
+function unidadesGrid(cont,n){
+  cont.innerHTML='';
+  if(n<=0) return;
+  const cols=Math.ceil(Math.sqrt(n));
+  const f=document.createElement('div');
+  f.className='unidades-fila'+(cols>=10?' muy-densa':cols>=5?' densa':'');
+  f.style.gridTemplateColumns='repeat('+cols+',1fr)';
+  for(let i=0;i<n;i++){
+    const u=document.createElement('div');u.className='mini-unidad';f.appendChild(u);
+  }
+  cont.appendChild(f);
+}
+function rejilla10(cont,llenas){
+  cont.innerHTML='';
+  const g=document.createElement('div');g.className='rej rej-10';
+  for(let i=0;i<10;i++){
+    const c=document.createElement('div');
+    c.className='celda'+(i<llenas?' lleno':'');
+    if(i<llenas) c.style.animationDelay=(i*45)+'ms';
+    g.appendChild(c);
+  }
+  cont.appendChild(g);
+}
+function rejilla100(cont,llenas){
+  cont.innerHTML='';
+  const g=document.createElement('div');g.className='rej rej-100';
+  for(let i=0;i<100;i++){
+    const c=document.createElement('div');
+    c.className='celda'+(i<llenas?' lleno':'');
+    if(i<llenas) c.style.animationDelay=Math.min(i*8,600)+'ms';
+    g.appendChild(c);
+  }
+  cont.appendChild(g);
+}
+/* milésimas honestas: 100 centésimas, cada una partida en 10 milésimas iguales (=1000) */
+function rejillaMil(cont,milTotales){ // milTotales: 0..1000
+  cont.innerHTML='';
+  const g=document.createElement('div');g.className='rej rej-mil';
+  const centsLlenas=Math.floor(milTotales/10);   // centésimas completas (10 milésimas)
+  const resto=milTotales%10;                       // milésimas sueltas en la siguiente centésima
+  for(let i=0;i<100;i++){
+    const cm=document.createElement('div');cm.className='cmil';
+    const llenar = i<centsLlenas ? 10 : (i===centsLlenas ? resto : 0);
+    for(let k=0;k<10;k++){
+      const s=document.createElement('div');
+      s.className = k<llenar ? 'smil on' : 'smil';
+      if(k<llenar) s.style.animationDelay=Math.min(i*8+k*2,650)+'ms';
+      cm.appendChild(s);
+    }
+    g.appendChild(cm);
+  }
+  cont.appendChild(g);
+}
+
+/* ===================================================================
+   MODAL GENÉRICO
+   =================================================================== */
+function abrirModal(tit,builder,info){
+  document.getElementById('modal-tit').textContent=tit;
+  const lienzo=document.getElementById('modal-lienzo');
+  lienzo.innerHTML='';
+  builder(lienzo);
+  document.getElementById('modal-info').innerHTML=info;
+  document.getElementById('modal').classList.add('activo');
+}
+
+/* ===================================================================
+   1) CONCEPTOS
+   =================================================================== */
+const CONCEPTOS=[
+  {clave:'unidad',titulo:'1 UNIDAD',orden:'el todo',
+   prev:c=>{c.innerHTML='<div class="cuadro lleno"></div>';},
+   big:c=>{c.innerHTML='<div class="cuadro lleno"></div>';},
+   formula:'<span class="resalte">1 unidad</span> = un todo completo',
+   info:'La <span class="resalte">unidad</span> es el todo de referencia. Todo lo demás se mide respecto a ella.'},
+  {clave:'decimas',titulo:'DÉCIMAS',orden:'÷ 10',
+   prev:c=>rejilla10(c,10),big:c=>rejilla10(c,10),
+   formula:'1 unidad = <span class="resalte">10 décimas</span><br>1 décima = <span class="frac"><span class="arr">1</span><span class="aba">10</span></span> = <span class="num">0,1</span>',
+   info:'Si partimos la unidad en <span class="resalte">10 partes iguales</span>, cada parte es una <span class="resalte">décima</span> (1/10 = 0,1).'},
+  {clave:'centesimas',titulo:'CENTÉSIMAS',orden:'÷ 100',
+   prev:c=>rejilla100(c,100),big:c=>rejilla100(c,100),
+   formula:'1 unidad = <span class="resalte">100 centésimas</span><br>1 centésima = <span class="frac"><span class="arr">1</span><span class="aba">100</span></span> = <span class="num">0,01</span>',
+   info:'Partimos <span class="resalte">cada décima en 10</span> (la unidad en 100). Cada parte es una <span class="resalte">centésima</span> (1/100 = 0,01).'},
+  {clave:'milesimas',titulo:'MILÉSIMAS',orden:'÷ 1000',
+   prev:c=>rejillaMil(c,1000),big:c=>rejillaMil(c,1000),
+   formula:'1 unidad = <span class="resalte">1000 milésimas</span><br>1 milésima = <span class="frac"><span class="arr">1</span><span class="aba">1000</span></span> = <span class="num">0,001</span>',
+   info:'Partimos <span class="resalte">cada centésima en 10</span> (la unidad en 1000). Cada parte es una <span class="resalte">milésima</span> (1/1000 = 0,001). Las 100 centésimas se dividen en 10 cada una: <b>100 × 10 = 1000</b> cuadritos iguales.'}
+];
+(function pintaConceptos(){
+  const cont=document.getElementById('con-tarjetas');
+  CONCEPTOS.forEach(cc=>{
+    const t=document.createElement('div');
+    t.className='tarjeta';t.tabIndex=0;
+    t.innerHTML='<div class="tarjeta-tit">'+cc.titulo+'</div><div class="tarjeta-orden">'+cc.orden+'</div><div class="lienzo"></div><div class="formula">'+cc.formula+'</div><div class="lupa-pista"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>ver en grande</div>';
+    cc.prev(t.querySelector('.lienzo'));
+    const abrir=()=>abrirModal(cc.titulo,cc.big,cc.info);
+    t.addEventListener('click',abrir);
+    t.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();abrir();}});
+    cont.appendChild(t);
+  });
+})();
+
+/* ===================================================================
+   2) REPRESENTACIÓN (modelo de áreas)
+   =================================================================== */
+function repEjemplo(v){document.getElementById('rep-input').value=v;repRender();}
+function repLimpiar(){
+  document.getElementById('rep-input').value='';
+  document.getElementById('rep-error').textContent='';
+  document.getElementById('rep-salida-panel').style.display='none';
+}
+function repRender(){
+  const err=document.getElementById('rep-error');err.textContent='';
+  const num=parseDecimal(document.getElementById('rep-input').value);
+  if(isNaN(num)){err.textContent='⚠ Escribe un número válido, por ejemplo 2,875.';return;}
+  if(num<0){err.textContent='⚠ En esta vista usamos números mayores o iguales que 0.';return;}
+  if(num>999){err.textContent='⚠ Usa un número entre 0 y 999.';return;}
+  const o=ordenes(num);
+  const cont=document.getElementById('rep-tarjetas');cont.innerHTML='';
+
+  // unidades
+  if(o.entero>0){
+    const t=tarjetaBase('UNIDADES','enteros',
+      o.entero===1?'<span class="resalte">1 unidad</span> = 1 entero':'<span class="resalte">'+o.entero+' unidades</span> = '+o.entero+' enteros');
+    const lz=t.querySelector('.lienzo');
+    if(o.entero===1){ lz.innerHTML='<div class="cuadro lleno"></div>'; }
+    else { unidadesGrid(lz,o.entero); }
+    t.onclick=()=>abrirModal('UNIDADES',c=>{
+      if(o.entero===1){c.innerHTML='<div class="cuadro lleno"></div>';}
+      else{ unidadesGrid(c,o.entero); }
+    },'Se muestran <span class="resalte">'+o.entero+(o.entero===1?' unidad':' unidades')+'</span> completas.');
+    cont.appendChild(t);
+  }
+
+  // décimas
+  if(o.decimas>0||o.centesimas>0||o.milesimas>0){
+    const t=tarjetaBase('DÉCIMAS','÷ 10',
+      '<span class="resalte">'+o.decimas+'</span> décimas = <span class="frac"><span class="arr">'+o.decimas+'</span><span class="aba">10</span></span> = <span class="num">'+fmt(o.decimas/10,1,1)+'</span>');
+    rejilla10(t.querySelector('.lienzo'),o.decimas);
+    t.onclick=()=>abrirModal('DÉCIMAS',c=>rejilla10(c,o.decimas),'Cada tira = 1 décima (0,1).<br>Coloreadas: <span class="resalte">'+o.decimas+' de 10</span>.');
+    cont.appendChild(t);
+  }
+  // centésimas
+  if(o.centesimas>0||o.milesimas>0){
+    const t=tarjetaBase('CENTÉSIMAS','÷ 100',
+      '<span class="resalte">'+o.centesimas+'</span> centésimas = <span class="frac"><span class="arr">'+o.centesimas+'</span><span class="aba">100</span></span> = <span class="num">'+fmt(o.centesimas/100,2,2)+'</span>');
+    rejilla100(t.querySelector('.lienzo'),o.centesimas);
+    t.onclick=()=>abrirModal('CENTÉSIMAS',c=>rejilla100(c,o.centesimas),'Cada cuadrito = 1 centésima (0,01).<br>Coloreados: <span class="resalte">'+o.centesimas+' de 100</span>.');
+    cont.appendChild(t);
+  }
+  // milésimas
+  if(o.milesimas>0){
+    const t=tarjetaBase('MILÉSIMAS','÷ 1000',
+      '<span class="resalte">'+o.milesimas+'</span> milésimas = <span class="frac"><span class="arr">'+o.milesimas+'</span><span class="aba">1000</span></span> = <span class="num">'+fmt(o.milesimas/1000,3,3)+'</span>');
+    rejillaMil(t.querySelector('.lienzo'),o.milesimas);
+    t.onclick=()=>abrirModal('MILÉSIMAS',c=>rejillaMil(c,o.milesimas),'Cada cuadrito = 1 milésima (0,001).<br>Coloreadas: <span class="resalte">'+o.milesimas+' de 1000</span>.');
+    cont.appendChild(t);
+  }
+
+  if(o.entero===0&&o.totalMil===0){
+    cont.innerHTML='<p style="color:var(--tenue);padding:20px">El número 0 no tiene partes para representar.</p>';
+  }
+
+  // resumen pedagógico (puente hacia el todo + lectura)
+  const res=document.getElementById('rep-resumen');
+  let cuadroNum='';
+  if(o.totalMil>0){
+    cuadroNum='<div class="fila"><div class="etq">La parte decimal sobre 1 unidad</div>'
+      +'<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px">'
+      +'<div class="lienzo" id="rep-todo" style="margin:0;width:140px;height:140px"></div>'
+      +'<div class="val">Las <span class="num">'+o.totalMil+'</span> milésimas coloreadas equivalen a <span class="num">'+fmt(o.totalMil/1000,1,3)+'</span> de un cuadrado completo.<br><span style="color:var(--tenue)">'+o.totalMil+'/1000 del todo</span></div>'
+      +'</div></div>';
+  }
+  res.innerHTML=cuadroNum
+    +'<div class="fila"><div class="etq">Se lee</div><div class="val">'+lecturaPosicional(num)+'</div></div>'
+    +'<div class="fila"><div class="etq">El número</div><div class="val num">'+fmt(num,0,3)+'</div></div>';
+  if(o.totalMil>0){ rejillaMil(document.getElementById('rep-todo'),o.totalMil); }
+
+  document.getElementById('rep-salida-panel').style.display='block';
+}
+function tarjetaBase(titulo,orden,formula){
+  const t=document.createElement('div');t.className='tarjeta';t.tabIndex=0;
+  t.innerHTML='<div class="tarjeta-tit">'+titulo+'</div><div class="tarjeta-orden">'+orden+'</div><div class="lienzo"></div><div class="formula">'+formula+'</div><div class="lupa-pista"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>ver en grande</div>';
+  t.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&t.onclick){e.preventDefault();t.onclick();}});
+  return t;
+}
+document.getElementById('rep-input').addEventListener('keydown',e=>{if(e.key==='Enter')repRender();});
+
+/* ===================================================================
+   3) VALOR POSICIONAL
+   =================================================================== */
+function vpEjemplo(v){document.getElementById('vp-input').value=v;vpRender();}
+function vpRender(){
+  const err=document.getElementById('vp-error');err.textContent='';
+  const num=parseDecimal(document.getElementById('vp-input').value);
+  if(isNaN(num)){err.textContent='⚠ Escribe un número válido, por ejemplo 2,875.';return;}
+  if(Math.abs(num)>999999){err.textContent='⚠ Usa un número de hasta 6 cifras enteras.';return;}
+  const neg=num<0;
+  const o=ordenes(num);
+  // dígitos enteros (sin ceros a la izquierda, mínimo "0")
+  let entStr=String(o.entero);
+  const entDigits=entStr.split('');
+  const decDigits=[o.decimas,o.centesimas,o.milesimas];
+
+  const NOMB_ENT=['unidades','decenas','centenas','unidades de millar','decenas de millar','centenas de millar'];
+  const ABR_ENT=['U','D','C','UM','DM','CM'];
+  // construir tabla
+  let html='<table><tr>';
+  // cabecera enteros
+  entDigits.forEach((d,i)=>{
+    const pos=entDigits.length-1-i;
+    html+='<th class="col-ent"><div class="abrev">'+(ABR_ENT[pos]||'·')+'</div></th>';
+  });
+  html+='<th class="coma"><div class="abrev">,</div></th>';
+  const ABR_DEC=['d','c','m'];
+  decDigits.forEach((d,i)=>{ html+='<th class="col-dec"><div class="abrev">'+ABR_DEC[i]+'</div></th>'; });
+  html+='</tr><tr>';
+  // dígitos
+  entDigits.forEach((d,i)=>{
+    const activo=(d!=='0')||(entDigits.length===1)?' activo':'';
+    html+='<td><div class="digito'+activo+'">'+d+'</div></td>';
+  });
+  html+='<td class="coma"><div class="digito">,</div></td>';
+  decDigits.forEach(d=>{ html+='<td><div class="digito'+(d>0?' activo':'')+'">'+d+'</div></td>'; });
+  html+='</tr><tr>';
+  // nombres
+  entDigits.forEach((d,i)=>{const pos=entDigits.length-1-i;html+='<td class="nombre">'+(NOMB_ENT[pos]||'')+'</td>';});
+  html+='<td class="coma"></td>';
+  ['décimas','centésimas','milésimas'].forEach(n=>{html+='<td class="nombre">'+n+'</td>';});
+  html+='</tr></table>';
+  document.getElementById('vp-tabla').innerHTML=html;
+
+  // lectura
+  document.getElementById('vp-lectura').innerHTML=
+    '<div class="fila"><div class="etq">Se lee (por valor posicional)</div><div class="val">'+lecturaPosicional(num)+'</div></div>'
+    +'<div class="fila"><div class="etq">También se puede leer</div><div class="val">'+lecturaComa(num)+'</div></div>';
+
+  // descomposición
+  const desc=document.getElementById('vp-desc');
+  const signo=neg?'−':'';
+  // aditiva
+  const tAdd=[];
+  if(o.entero!==0||o.totalMil===0) tAdd.push(String(o.entero));
+  if(o.decimas>0) tAdd.push(fmt(o.decimas/10,1,1));
+  if(o.centesimas>0) tAdd.push(fmt(o.centesimas/100,2,2));
+  if(o.milesimas>0) tAdd.push(fmt(o.milesimas/1000,3,3));
+  const aditiva=signo+tAdd.join(' <span class="mas">+</span> ');
+  // multiplicativa
+  const tMul=[];
+  if(o.entero!==0) tMul.push(o.entero+'×1');
+  if(o.decimas>0) tMul.push(o.decimas+'×0,1');
+  if(o.centesimas>0) tMul.push(o.centesimas+'×0,01');
+  if(o.milesimas>0) tMul.push(o.milesimas+'×0,001');
+  const multipl=tMul.length?signo+tMul.join(' <span class="mas">+</span> '):signo+'0';
+  // fracciones
+  const tFr=[];
+  if(o.entero!==0) tFr.push(String(o.entero));
+  if(o.decimas>0) tFr.push(frac(o.decimas,10));
+  if(o.centesimas>0) tFr.push(frac(o.centesimas,100));
+  if(o.milesimas>0) tFr.push(frac(o.milesimas,1000));
+  const fracc=tFr.length?signo+tFr.join(' <span class="mas">+</span> '):signo+'0';
+  // como única fracción de milésimas
+  const totalMilCompleto=o.entero*1000+o.totalMil;
+  const unaFrac=signo+frac(totalMilCompleto,1000)+' = '+signo+'<span class="num">'+totalMilCompleto+'</span> milésimas';
+
+  // equivalencia de ceros a la derecha
+  const base=fmt(num,0,3);
+  let equiv='';
+  if(o.totalMil>0){
+    const nz=String(o.totalMil).padStart(3,'0').replace(/0+$/,'').length;
+    if(nz<3){
+      const opciones=[];
+      for(let d=nz;d<=3;d++) opciones.push(fmt(num,d,d));
+      equiv='<div class="nota-equiv" style="margin-top:14px"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div>Añadir ceros a la derecha no cambia el valor: <span class="num">'+opciones.join(' = ')+'</span></div></div>';
+    }
+  }
+
+  desc.innerHTML=
+    '<div class="desc-caja"><div class="etq">Descomposición (suma de órdenes)</div><div class="cuerpo">'+signo+base+' = '+aditiva+'</div></div>'
+    +'<div class="desc-caja"><div class="etq">Forma multiplicativa</div><div class="cuerpo">'+multipl+'</div></div>'
+    +'<div class="desc-caja"><div class="etq">Como suma de fracciones</div><div class="cuerpo">'+fracc+'</div></div>'
+    +'<div class="desc-caja"><div class="etq">Como una sola fracción</div><div class="cuerpo">'+unaFrac+'</div></div>'
+    +equiv;
+
+  document.getElementById('vp-salida').style.display='block';
+}
+function frac(a,b){return '<span class="frac"><span class="arr">'+a+'</span><span class="aba">'+b+'</span></span>';}
+document.getElementById('vp-input').addEventListener('keydown',e=>{if(e.key==='Enter')vpRender();});
+
+/* ===================================================================
+   4) RECTA NUMÉRICA (zoom con conectores)
+   =================================================================== */
+function recEjemplo(v){document.getElementById('rec-input').value=v;recUbicar();}
+function posX(value,min,max){ return 5 + ((value-min)/(max-min))*90; } // 5%..95%
+
+function rectaPaso(insignia,titulo,min,max,paso,decimales,num,segLow,segHigh){
+  // devuelve {html} de un paso con ticks, marcador y, opcionalmente, segmento resaltado
+  let ticks='';
+  const n=Math.round((max-min)/paso);
+  for(let i=0;i<=n;i++){
+    const value=min+i*paso;
+    const x=5+(i/n)*90;
+    ticks+='<div class="tick" style="left:'+x+'%"></div>';
+    const alt=(decimales>0&&i%2===1)?' et-alt':'';
+    ticks+='<div class="tick-et'+alt+'" style="left:'+x+'%">'+fmt(value,decimales,decimales)+'</div>';
+  }
+  // segmento (qué tramo se amplía abajo)
+  let seg='';
+  if(segLow!=null){
+    const xa=posX(segLow,min,max), xb=posX(segHigh,min,max);
+    seg='<div class="seg-activo" style="left:'+xa+'%;width:'+(xb-xa)+'%"></div>';
+  }
+  // marcador
+  const xm=posX(num,min,max);
+  const marca='<div class="marcador" style="left:'+xm+'%"></div><div class="marcador-et" style="left:'+xm+'%">'+fmt(num,0,3)+'</div>';
+  return '<div class="recta-paso"><div class="recta-cab"><span class="insignia">'+insignia+'</span> '+titulo+'</div>'
+    +'<div class="recta"><div class="eje"></div>'+ticks+seg+marca+'</div></div>';
+}
+function conectorSVG(xa,xb){
+  // dibuja dos líneas que conectan el tramo [xa,xb] de arriba con [5,95] de abajo
+  return '<svg class="conector" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">'
+    +'<polygon points="'+xa+',0 '+xb+',0 95,26 5,26" fill="rgba(42,157,143,.10)"/>'
+    +'<line x1="'+xa+'" y1="0" x2="5" y2="26" stroke="#2A9D8F" stroke-width="0.5"/>'
+    +'<line x1="'+xb+'" y1="0" x2="95" y2="26" stroke="#2A9D8F" stroke-width="0.5"/>'
+    +'</svg>';
+}
+function recUbicar(){
+  const err=document.getElementById('rec-error');err.textContent='';
+  const num=parseDecimal(document.getElementById('rec-input').value);
+  if(isNaN(num)){err.textContent='⚠ Escribe un número válido, por ejemplo 1,376.';return;}
+  if(Math.abs(num)>1000){err.textContent='⚠ Usa un número entre −1000 y 1000.';return;}
+
+  // rangos de cada nivel (aritmética en milésimas enteras: evita errores de coma flotante)
+  const mil=Math.round(num*1000);
+  const uMin=Math.floor(mil/10000)*10,  uMax=uMin+10;        // unidades (decena)
+  const dMin=Math.floor(mil/1000),      dMax=dMin+1;         // décimas
+  const cMin=Math.floor(mil/100)/10,    cMax=Math.round(cMin*10+1)/10;   // centésimas
+  const mMin=Math.floor(mil/10)/100,    mMax=Math.round(mMin*100+1)/100; // milésimas
+
+  let html='';
+  html+=rectaPaso('×1','Unidades',uMin,uMax,1,0,num,dMin,dMax);
+  html+=conectorSVG(posX(dMin,uMin,uMax),posX(dMax,uMin,uMax));
+  html+=rectaPaso('×10','Décimas',dMin,dMax,0.1,1,num,cMin,cMax);
+  html+=conectorSVG(posX(cMin,dMin,dMax),posX(cMax,dMin,dMax));
+  html+=rectaPaso('×100','Centésimas',cMin,cMax,0.01,2,num,mMin,mMax);
+  html+=conectorSVG(posX(mMin,cMin,cMax),posX(mMax,cMin,cMax));
+  html+=rectaPaso('×1000','Milésimas',mMin,mMax,0.001,3,num,null,null);
+
+  const z=document.getElementById('rec-zoom');
+  z.innerHTML='<div class="panel-titulo" style="font-size:1rem"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> Zoom progresivo sobre <span class="num" style="margin-left:6px">'+fmt(num,0,3)+'</span></div>'+html
+    +'<p class="panel-sub" style="margin:14px 0 0">Cada recta amplía el tramo turquesa de la anterior. Así, las milésimas son una lupa sobre las centésimas, que son una lupa sobre las décimas.</p>';
+  z.style.display='block';
+}
+document.getElementById('rec-input').addEventListener('keydown',e=>{if(e.key==='Enter')recUbicar();});
+
+function recToggleComp(){
+  const c=document.getElementById('rec-comp');
+  c.style.display=c.style.display==='none'?'block':'none';
+  if(c.style.display==='block') c.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function _decimalsOf(step){ const s=String(step); const i=s.indexOf('.'); return i<0?0:(s.length-i-1); }
+function _niceStep(range,target){
+  if(range<=0) return 1;
+  const raw=range/target, mag=Math.pow(10,Math.floor(Math.log10(raw))), norm=raw/mag;
+  let f; if(norm<1.5)f=1; else if(norm<3)f=2; else if(norm<7)f=5; else f=10;
+  return f*mag;
+}
+function _decCount(v){ const o=ordenes(v); let s=String(o.totalMil).padStart(3,'0').replace(/0+$/,''); return s.length; }
+// primera posición donde difieren a y b (por valor posicional); a,b >= 0
+function _primeraDif(a,b){
+  const oa=ordenes(a), ob=ordenes(b);
+  if(oa.entero!==ob.entero) return {lugar:'la parte entera', da:oa.entero, db:ob.entero};
+  if(oa.decimas!==ob.decimas) return {lugar:'las décimas', da:oa.decimas, db:ob.decimas};
+  if(oa.centesimas!==ob.centesimas) return {lugar:'las centésimas', da:oa.centesimas, db:ob.centesimas};
+  if(oa.milesimas!==ob.milesimas) return {lugar:'las milésimas', da:oa.milesimas, db:ob.milesimas};
+  return null;
+}
+
+function recComparar(){
+  const err=document.getElementById('c-error');err.textContent='';
+  const ids=['c1','c2','c3'];
+  const nums=[];
+  for(let i=0;i<3;i++){
+    const v=document.getElementById(ids[i]).value.trim();
+    if(v!==''){
+      const n=parseDecimal(v);
+      if(isNaN(n)){err.textContent='⚠ Valor no válido en el nº '+(i+1)+'. Usa formatos como 1,5 o -0,2.';return;}
+      if(Math.abs(n)>999999){err.textContent='⚠ Usa números de hasta 6 cifras enteras.';return;}
+      nums.push({v:n,id:i+1});
+    }
+  }
+  if(nums.length===0){err.textContent='⚠ Introduce al menos un número.';return;}
+  nums.sort((a,b)=>a.v-b.v);
+
+  /* ---------- 1) RECTA AUTO-ESCALADA con marcas mayores y menores ---------- */
+  const dataLo=nums[0].v, dataHi=nums[nums.length-1].v;
+  let span=dataHi-dataLo; if(span<1e-9) span=1;
+  const pad=span*0.18;
+  const major=_niceStep(span+2*pad,6);
+  let lo=Math.floor((dataLo-pad)/major+1e-9)*major;
+  let hi=Math.ceil((dataHi+pad)/major-1e-9)*major;
+  if(hi-lo<major){ lo-=major; hi+=major; }
+  lo=Math.round(lo*1e6)/1e6; hi=Math.round(hi*1e6)/1e6;
+  const decEt=_decimalsOf(major);
+  // marcas menores: máxima subdivisión que no sature
+  let perMajor=1;
+  for(const d of [10,5,4,2]){ if((hi-lo)/(major/d) <= 70){ perMajor=d; break; } }
+  const minor=major/perMajor;
+
+  const recta=document.getElementById('c-recta');
+  recta.innerHTML='<div class="eje"></div>';
+  // menores
+  if(perMajor>1){
+    const nMin=Math.round((hi-lo)/minor);
+    for(let i=0;i<=nMin;i++){
+      const v=Math.round((lo+i*minor)*1e6)/1e6;
+      if(Math.abs(v/major-Math.round(v/major))<1e-6) continue; // coincide con mayor
+      const x=posX(v,lo,hi);
+      const t=document.createElement('div');t.className='tick menor';t.style.left=x+'%';recta.appendChild(t);
+    }
+  }
+  // mayores con etiqueta
+  const nMaj=Math.round((hi-lo)/major);
+  for(let i=0;i<=nMaj;i++){
+    const v=Math.round((lo+i*major)*1e6)/1e6;
+    const x=posX(v,lo,hi);
+    const t=document.createElement('div');t.className='tick';t.style.left=x+'%';recta.appendChild(t);
+    const et=document.createElement('div');et.className='tick-et';et.style.left=x+'%';et.textContent=fmt(v,decEt,decEt);recta.appendChild(et);
+  }
+  // marcadores
+  const niveles=[0,22,44];
+  nums.forEach((nd,idx)=>{
+    const x=posX(nd.v,lo,hi);
+    const m=document.createElement('div');m.className='comp-marca m'+nd.id;m.style.left=x+'%';recta.appendChild(m);
+    const et=document.createElement('div');et.className='comp-et m'+nd.id;et.style.left=x+'%';et.style.top=niveles[idx%3]+'px';et.textContent=fmt(nd.v,0,3);recta.appendChild(et);
+  });
+  recta.style.display='block';
+
+  /* ---------- 2) TABLA DE VALOR POSICIONAL + EXPLICACIÓN ---------- */
+  const det=document.getElementById('c-detalle');
+  if(nums.length<2){
+    det.innerHTML='<div class="cmp-tit">Comparación</div><p style="color:var(--tenue);font-size:.92rem;margin:0">Introduce al menos <b>dos</b> números para compararlos cifra a cifra.</p>';
+    det.style.display='block';
+    const res0=document.getElementById('c-resultado'); res0.style.display='none';
+    return;
+  }
+  const hayNeg = nums.some(n=>n.v<0);
+  const maxDec = Math.max(1, ...nums.map(n=>_decCount(n.v)));
+  const maxIntLen = Math.max(1, ...nums.map(n=>String(Math.floor(Math.abs(n.v))).length));
+
+  // dígitos por número (valor absoluto), alineados
+  const filas = nums.map(n=>{
+    const o=ordenes(n.v);
+    const ent=String(o.entero).padStart(maxIntLen,'0');     // se marcará el relleno
+    const entReal=String(o.entero);
+    const decFull=String(o.totalMil).padStart(3,'0').slice(0,maxDec); // d c m (recortado a maxDec)
+    return {n, ent, entReal, dec:decFull, decReal:_decCount(n.v), neg:n.v<0};
+  });
+
+  // columna decisiva (solo si no hay negativos): primera donde no todos coinciden
+  let decideIdx=-1; // 0..(maxIntLen-1) enteros, luego maxIntLen.. decimales
+  if(!hayNeg){
+    const seqs=filas.map(f=>f.ent+f.dec);
+    for(let k=0;k<seqs[0].length;k++){
+      const set=new Set(seqs.map(s=>s[k]));
+      if(set.size>1){ decideIdx=k; break; }
+    }
+  }
+
+  // cabecera de columnas
+  const nomEnt=['U','D','C','UM','DM','CM']; // de unidades hacia la izquierda
+  let ths='<th></th>';
+  for(let j=0;j<maxIntLen;j++){ const pot=maxIntLen-1-j; ths+='<th class="col-ent">'+(nomEnt[pot]||'·')+'</th>'; }
+  ths+='<th></th>'; // coma
+  const nomDec=['d','c','m'];
+  for(let j=0;j<maxDec;j++){ ths+='<th class="col-dec">'+nomDec[j]+'</th>'; }
+
+  let trs='';
+  filas.forEach(f=>{
+    let tds='<td class="et-num"><span class="chip-num m'+f.n.id+'">'+(f.neg?'−':'')+fmt(Math.abs(f.n.v),0,3)+'</span></td>';
+    for(let j=0;j<maxIntLen;j++){
+      const k=j;                                  // índice global de columna
+      const esRelleno = j < (maxIntLen-f.entReal.length);
+      let cls='';
+      if(esRelleno) cls+=' pad';
+      if(k===decideIdx) cls='decide';
+      tds+='<td class="'+cls.trim()+'">'+f.ent[j]+'</td>';
+    }
+    tds+='<td class="coma">,</td>';
+    for(let j=0;j<maxDec;j++){
+      const k=maxIntLen+j;
+      let cls='dec';
+      if(j>=f.decReal) cls+=' pad';                 // cero de relleno a la derecha
+      if(k===decideIdx) cls='decide';
+      tds+='<td class="'+cls+'">'+f.dec[j]+'</td>';
+    }
+    trs+='<tr>'+tds+'</tr>';
+  });
+
+  // explicación por parejas adyacentes (orden creciente)
+  let pasos='';
+  for(let i=0;i<nums.length-1;i++){
+    const a=nums[i].v, b=nums[i+1].v;
+    const sa=fmt(a,0,3), sb=fmt(b,0,3);
+    let txt;
+    if(Math.abs(a-b)<1e-9){
+      txt='son <b>iguales</b> (mismas cifras en todos los órdenes).';
+    } else if(a<0 && b>=0){
+      txt='<span class="mk">'+sa+'</span> es negativo y <span class="mk">'+sb+'</span> no: cualquier negativo es menor.';
+    } else if(a<0 && b<0){
+      txt='los dos son negativos; <span class="mk">'+sa+'</span> queda más a la izquierda en la recta, así que es menor.';
+    } else {
+      const d=_primeraDif(a,b);
+      if(d && d.lugar==='la parte entera'){
+        txt='ya en <b>la parte entera</b>: <span class="mk">'+d.da+'</span> &lt; <span class="mk">'+d.db+'</span>, así que no hace falta mirar más.';
+      } else if(d){
+        const hasta={'las décimas':'en la parte entera','las centésimas':'hasta las décimas','las milésimas':'hasta las centésimas'}[d.lugar]||'antes';
+        txt='coinciden '+hasta+'; en <b>'+d.lugar+'</b>, <span class="mk">'+d.da+'</span> &lt; <span class="mk">'+d.db+'</span>.';
+      } else { txt='ordenados por su valor.'; }
+    }
+    pasos+='<div class="cmp-paso"><span class="lt">'+sa+' &lt; '+sb+'</span><span>'+txt+'</span></div>';
+  }
+
+  const nota = (maxDec>1 || filas.some(f=>f.dec.replace(/0+$/,'').length<maxDec))
+    ? '<p style="font-size:.82rem;color:var(--tenue);margin:8px 0 0">Truco: se rellena con <b>ceros a la derecha</b> para que todos tengan las mismas cifras decimales (0,5 = 0,50 = 0,500). Eso no cambia el valor.</p>' : '';
+
+  det.innerHTML='<div class="cmp-tit">Cifra a cifra · por valor posicional</div>'+
+    '<div class="cmp-tabla-wrap"><table class="cmp-tabla"><thead><tr>'+ths+'</tr></thead><tbody>'+trs+'</tbody></table></div>'+
+    nota+
+    '<div class="cmp-expl">'+pasos+'</div>';
+  det.style.display='block';
+
+  /* ---------- 3) ORDEN FINAL ---------- */
+  const seq=nums.map(n=>'<span class="num">'+fmt(n.v,0,3)+'</span>').join('<span class="op">&lt;</span>');
+  const res=document.getElementById('c-resultado');
+  res.innerHTML='<div class="titulo">De menor a mayor</div><div class="secuencia">'+seq+'</div>';
+  res.style.display='block';
+}
+['c1','c2','c3'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')recComparar();}));
+
+/* ===================================================================
+   5) REDONDEO
+   =================================================================== */
+let redOrden=0; // 0=unidad, 1=décima, 2=centésima
+document.querySelectorAll('#red-selector button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#red-selector button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    redOrden=+b.dataset.ord;
+    if(document.getElementById('red-input').value.trim()!=='') redRender();
+  });
+});
+function redEjemplo(v){document.getElementById('red-input').value=v;redRender();}
+const ORD_NOM=['la unidad','la décima','la centésima'];
+const ORD_SIG=['las décimas','las centésimas','las milésimas'];
+function redRender(){
+  const err=document.getElementById('red-error');err.textContent='';
+  const num=parseDecimal(document.getElementById('red-input').value);
+  if(isNaN(num)){err.textContent='⚠ Escribe un número válido, por ejemplo 2,875.';return;}
+  if(Math.abs(num)>9999){err.textContent='⚠ Usa un número entre −9999 y 9999.';return;}
+
+  // trabajo en milésimas enteras
+  const mil=Math.round(num*1000);
+  const pasoMil=[1000,100,10][redOrden];              // tamaño del orden en milésimas
+  const bajoMil=Math.floor(mil/pasoMil)*pasoMil;
+  const exacto=(bajoMil===mil);
+  const altoMil=bajoMil+pasoMil;
+  const bajo=bajoMil/1000, alto=altoMil/1000;
+  // cifra decisiva: la del orden siguiente
+  const dentro=mil-bajoMil;                            // 0..pasoMil-1
+  const cifra=Math.floor(dentro/(pasoMil/10));         // 0..9
+  const sube=cifra>=5;
+  const resultado=exacto?bajo:(sube?alto:bajo);
+  const decRes=redOrden;                               // decimales del resultado
+
+  /* recta */
+  const R=document.getElementById('red-recta');
+  const px=v=>6+((v-bajo)/(alto-bajo))*88;             // 6%..94%
+  let h='<div class="eje"></div>';
+  // ticks de las 10 subdivisiones
+  for(let i=0;i<=10;i++){
+    const v=(bajoMil+i*(pasoMil/10))/1000;
+    const x=px(v);
+    h+='<div class="tick" style="left:'+x+'%;top:70px;height:11px"></div>';
+  }
+  const dSub=redOrden+1;
+  h+='<div class="red-cand'+(!exacto&&!sube?' gana':'')+'" style="left:'+px(bajo)+'%"><div class="red-cand-et">'+fmt(bajo,decRes,decRes)+'</div></div>';
+  h+='<div class="red-cand'+(!exacto&&sube?' gana':'')+'" style="left:'+px(alto)+'%"><div class="red-cand-et">'+fmt(alto,decRes,decRes)+'</div></div>';
+  const medio=(bajo+alto)/2;
+  h+='<div class="red-medio" style="left:'+px(medio)+'%"><div class="red-medio-et">'+fmt(medio,dSub,dSub)+'</div></div>';
+  if(!exacto){
+    // arco desde el número hasta el candidato ganador
+    const xa=Math.min(px(num),px(resultado)), xb=Math.max(px(num),px(resultado));
+    if(xb-xa>0.5) h+='<div class="red-arco" style="left:'+xa+'%;width:'+(xb-xa)+'%"></div>';
+  }
+  h+='<div class="red-marca" style="left:'+px(num)+'%"></div><div class="red-marca-et" style="left:'+px(num)+'%">'+fmt(num,0,3)+'</div>';
+  R.innerHTML=h;
+
+  /* regla explicada */
+  const reg=document.getElementById('red-regla');
+  if(exacto){
+    reg.innerHTML='<div class="red-paso"><span class="n">✓</span><div>El número <b>ya es exacto</b> en '+ORD_NOM[redOrden]+': no hay nada que redondear.</div></div>';
+  } else {
+    reg.innerHTML=
+      '<div class="red-paso"><span class="n">1</span><div>Los dos candidatos en '+ORD_NOM[redOrden]+' son <b>'+fmt(bajo,decRes,decRes)+'</b> (por abajo) y <b>'+fmt(alto,decRes,decRes)+'</b> (por arriba).</div></div>'
+      +'<div class="red-paso"><span class="n">2</span><div>Miramos la cifra de '+ORD_SIG[redOrden]+': <span class="cifra-clave">'+cifra+'</span>. '
+      +(sube?'Como es <b>5 o más</b>, redondeamos <b>hacia arriba</b>.':'Como es <b>menor que 5</b>, redondeamos <b>hacia abajo</b>.')+'</div></div>'
+      +'<div class="red-paso"><span class="n">3</span><div>En la recta se ve: '+fmt(num,0,3)+' está '+(sube?'a la derecha del punto medio, más cerca de <b>'+fmt(alto,decRes,decRes)+'</b>':'a la izquierda del punto medio, más cerca de <b>'+fmt(bajo,decRes,decRes)+'</b>')+'.</div></div>';
+  }
+  document.getElementById('red-final').innerHTML='<div class="titulo">Redondeado a '+ORD_NOM[redOrden]+'</div><div class="valor">'+fmt(num,0,3)+' ≈ '+fmt(resultado,decRes,decRes)+'</div>';
+  document.getElementById('red-salida').style.display='block';
+}
+document.getElementById('red-input').addEventListener('keydown',e=>{if(e.key==='Enter')redRender();});
+
+/* ===================================================================
+   6) PRÁCTICA (ejercicios autoevaluables)
+   =================================================================== */
+let prAciertos=0, prTotal=0, prRacha=0, prResuelta=false;
+function prReiniciar(){prAciertos=0;prTotal=0;prRacha=0;prPintaMarcador();prNueva();}
+function prPintaMarcador(){
+  document.getElementById('pr-aciertos').textContent=prAciertos;
+  document.getElementById('pr-total').textContent=prTotal;
+  document.getElementById('pr-racha').textContent=prRacha;
+}
+function _rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function _numAleatorio(maxEnt,decMin,decMax){
+  const ent=_rnd(0,maxEnt);
+  const nDec=_rnd(decMin,decMax);
+  let m=0;
+  for(let i=0;i<nDec;i++){ m=m*10+_rnd(i===nDec-1?1:0,9); } // última cifra ≠ 0
+  return Math.round((ent+m/Math.pow(10,nDec))*1000)/1000;
+}
+function _baraja(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function prResuelve(ok,explicacion){
+  if(prResuelta) return;
+  prResuelta=true;
+  prTotal++;
+  if(ok){prAciertos++;prRacha++;}else{prRacha=0;}
+  prPintaMarcador();
+  const fb=document.getElementById('pr-feedback');
+  fb.className='feedback '+(ok?'ok':'mal');
+  fb.innerHTML=(ok?'✔ ¡Correcto! ':'✘ No exactamente. ')+explicacion;
+}
+
+function prNueva(){
+  prResuelta=false;
+  const zona=document.getElementById('pr-zona');
+  const tipo=_rnd(1,4);
+  let html='';
+
+  if(tipo===1){
+    /* Lectura → número (opciones) */
+    const n=_numAleatorio(9,1,3);
+    const lect=lecturaPosicional(n);
+    const o=ordenes(n);
+    // distractores típicos: mover la coma, ignorar orden
+    const set=new Set([n]);
+    const cand=[Math.round(n*10*1000)/1000, Math.round(n/10*1000)/1000,
+      Math.round((o.entero + o.totalMil/100)*1000)/1000,
+      Math.round((o.entero + o.totalMil/10000)*1000)/1000];
+    for(const c of cand){ if(set.size<4 && c>0 && !set.has(c)) set.add(c); }
+    while(set.size<4){ const c=_numAleatorio(9,1,3); if(!set.has(c)) set.add(c); }
+    const ops=_baraja([...set]);
+    html='<div class="pregunta"><div class="tipo">Escribir con cifras</div>'
+      +'<div class="enunciado">¿Qué número es «<b>'+lect+'</b>»?</div>'
+      +'<div class="respuestas">'+ops.map(v=>'<button class="resp-op num" onclick="prOpcion(this,'+(v===n)+',\''+fmt(n,0,3).replace(/\./g,'')+'\')">'+fmt(v,0,3)+'</button>').join('')+'</div>'
+      +'<div class="feedback" id="pr-feedback"></div></div>';
+    zona.innerHTML=html;
+    zona.dataset.sol=fmt(n,0,3);
+  }
+
+  else if(tipo===2){
+    /* Número → lectura (opciones) */
+    const n=_numAleatorio(9,1,3);
+    const buena=lecturaPosicional(n);
+    const set=new Set([buena]);
+    const distract=[lecturaPosicional(Math.round(n*10*1000)/1000),
+      lecturaPosicional(Math.round(n/10*1000)/1000),
+      lecturaComa(n)===buena?null:lecturaComa(Math.round(n*10*1000)/1000)];
+    for(const d of distract){ if(d && set.size<3 && !set.has(d)) set.add(d); }
+    while(set.size<3){ const d=lecturaPosicional(_numAleatorio(9,1,3)); if(!set.has(d)) set.add(d); }
+    const ops=_baraja([...set]);
+    html='<div class="pregunta"><div class="tipo">Lectura</div>'
+      +'<div class="enunciado">¿Cómo se lee <span class="num">'+fmt(n,0,3)+'</span> por valor posicional?</div>'
+      +'<div class="respuestas" style="flex-direction:column;align-items:stretch">'
+      +ops.map(t=>'<button class="resp-op" style="text-align:left" onclick="prOpcion(this,'+(t===buena)+',null)">'+t+'</button>').join('')
+      +'</div><div class="feedback" id="pr-feedback"></div></div>';
+    zona.innerHTML=html;
+    zona.dataset.sol=buena;
+  }
+
+  else if(tipo===3){
+    /* Comparación */
+    let a=_numAleatorio(4,1,3), b;
+    const modo=_rnd(1,3);
+    if(modo===1){ b=a; }                                      // iguales con distinta escritura visual
+    else { do{ b=_numAleatorio(4,1,3); }while(Math.abs(a-b)<1e-9); }
+    const sol=Math.abs(a-b)<1e-9?'=':(a<b?'<':'>');
+    // mostrar con distinto nº de decimales para provocar el error típico "más cifras = mayor"
+    const da=_rnd(1,3), db=_rnd(1,3);
+    const sa=fmt(a,Math.max(da,_decCount(a)),3), sb=fmt(b,Math.max(db,_decCount(b)),3);
+    html='<div class="pregunta"><div class="tipo">Comparación</div>'
+      +'<div class="enunciado">Compara: <span class="num">'+sa+'</span> &nbsp;□&nbsp; <span class="num">'+sb+'</span></div>'
+      +'<div class="respuestas">'
+      +['<','=','>'].map(s=>'<button class="resp-op num" onclick="prOpcion(this,'+(s===sol)+',null)">'+(s==='<'?'&lt;':s==='>'?'&gt;':'=')+'</button>').join('')
+      +'</div><div class="feedback" id="pr-feedback"></div></div>';
+    zona.innerHTML=html;
+    zona.dataset.sol=sa+' '+sol+' '+sb+'. Recuerda: se compara orden a orden, no por el número de cifras.';
+  }
+
+  else {
+    /* Redondeo */
+    const n=_numAleatorio(9,2,3);
+    const ord=_rnd(0,1);                                       // unidad o décima
+    const pasoMil=[1000,100][ord];
+    const mil=Math.round(n*1000);
+    const bajoMil=Math.floor(mil/pasoMil)*pasoMil;
+    const cifra=Math.floor((mil-bajoMil)/(pasoMil/10));
+    const resMil=(cifra>=5)?bajoMil+pasoMil:bajoMil;
+    const sol=resMil/1000, dec=ord;
+    const set=new Set([fmt(sol,dec,dec)]);
+    set.add(fmt((cifra>=5?bajoMil:bajoMil+pasoMil)/1000,dec,dec));        // el otro candidato
+    set.add(fmt(Math.round(n*10)/10===sol?sol+pasoMil/1000:Math.round(n*10)/10,Math.max(dec,1),Math.max(dec,1)));
+    while(set.size<3){ set.add(fmt(sol+_rnd(1,3)*pasoMil/1000,dec,dec)); }
+    const ops=_baraja([...set]);
+    const buena=fmt(sol,dec,dec);
+    html='<div class="pregunta"><div class="tipo">Redondeo</div>'
+      +'<div class="enunciado">Redondea <span class="num">'+fmt(n,0,3)+'</span> a '+ORD_NOM[ord]+'.</div>'
+      +'<div class="respuestas">'+ops.map(v=>'<button class="resp-op num" onclick="prOpcion(this,'+(v===buena)+',null)">'+v+'</button>').join('')+'</div>'
+      +'<div class="feedback" id="pr-feedback"></div></div>';
+    zona.innerHTML=html;
+    zona.dataset.sol=fmt(n,0,3)+' ≈ '+buena+' (la cifra siguiente es '+cifra+(cifra>=5?' → sube':' → se queda')+').';
+  }
+}
+function prOpcion(btn,ok){
+  if(prResuelta) return;
+  const zona=document.getElementById('pr-zona');
+  btn.classList.add(ok?'ok':'mal');
+  zona.querySelectorAll('.resp-op').forEach(b=>{b.disabled=true;});
+  prResuelve(ok, ok?'':'La respuesta correcta era: <b>'+zona.dataset.sol+'</b>');
+}
+prNueva();
+
+</script>
+</body>
+</html>
