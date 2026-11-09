@@ -1,6 +1,6 @@
 # SUPER MATH 2
 
-Colección de aplicaciones interactivas de matemáticas, sucesora de [SUPER MATH CODE](https://yowahesp.github.io/SUPER__MATH__CODE/). Cada aplicación es un único archivo HTML autocontenido (HTML + CSS + JavaScript, sin dependencias ni proceso de compilación) y funciona en cualquier navegador, también sin conexión.
+Colección de aplicaciones interactivas de matemáticas, sucesora de [SUPER MATH CODE](https://yowahesp.github.io/Super_Math_Code/). Cada aplicación es un único archivo HTML autocontenido (HTML + CSS + JavaScript, sin dependencias ni proceso de compilación) y funciona en cualquier navegador, también sin conexión.
 
 **Portal:** https://yowahesp.github.io/SUPER_MATH_2/
 
